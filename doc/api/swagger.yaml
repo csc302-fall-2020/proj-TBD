@@ -1,0 +1,155 @@
+
+# DOCUMENTATION
+# https://swagger.io/docs/specification/about/
+
+# ===================================== ENDPOINT TEMPLATE =====================================
+
+# /ENDPOINT_NAME/{id}:
+#     post:
+#       tags: 
+#         - ENDPOINT_CATEGORY
+#       summary: SUMMARY
+#       description: OPTIONAL_DESCRIPTION
+
+#       parameters:
+#         - in: path
+#           name: id   # Must be the same name as in the path
+#           required: true
+#           schema:
+#             type: integer
+#             minimum: 10 # e.g. anything below 10 is not accepted... we probably won't need this
+#           description: The user ID
+#         - in: query
+#           name: QUERY_PARAM_NAME
+#           required: false
+#           schema:
+#             default: 1
+#             type: integer #(array, boolean, integer, number, object, string)
+#           description: PARAM_DESCRIPTION
+
+#       requestBody:
+#         description: OPTIONAL_DESCRIPTION
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/COMPONENT_NAME'
+#           application/x-www-form-urlencoded:
+#             schema:
+#               type: object
+#               properties:
+#                 name:          # <--- form field name
+#                   type: string
+#                 fav_number:    # <--- form field name
+#                   type: integer
+#               required:
+#                 - name
+#                 - email
+#           text/plain:
+#             schema:
+#               type: string
+
+#       responses:
+#         '200': # 201, 401 etc.
+#           description: RESPONSE_DESCRIPTION
+#           content:
+#             application/json:
+#               schema: # Can also return a ref to a component
+#                 type: array #(array, boolean, integer, number, object, string)
+#                 items: 
+#                   type: string
+#                   example: "EXAMPLE_STRING"
+
+
+# ===================================== COMPONENT TEMPLATE ====================================
+
+# COMPONENT_NAME:
+#       type: object
+#       properties:
+#         id:
+#           type: integer
+#         name:
+#           type: string          
+
+
+# ====================================== API DESCRIPTION ======================================
+openapi: 3.0.0
+info:
+  title: NameTBD API
+  description: Description
+  version: 1.0.0
+paths:
+  /ENDPOINT_NAME/{id}:
+    post:
+      tags:
+        - ENDPOINT_CATEGORY
+      summary: SUMMARY
+      description: OPTIONAL_DESCRIPTION
+
+      parameters:
+        - in: path
+          name: id   # Must be the same name as in the path
+          required: true
+          schema:
+            type: integer
+            minimum: 10 # e.g. anything below 10 is not accepted... we probably won't need this
+          description: The user ID
+        - in: query
+          name: QUERY_PARAM_NAME
+          required: false
+          schema:
+            default: 1
+            type: integer #(array, boolean, integer, number, object, string)
+          description: PARAM_DESCRIPTION
+
+      requestBody:
+        description: OPTIONAL_DESCRIPTION
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/COMPONENT_NAME'
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:          # <--- form field name
+                  type: string
+                fav_number:    # <--- form field name
+                  type: integer
+              required:
+                - name
+                - email
+          text/plain:
+            schema:
+              type: string
+
+      responses:
+        '200': # 201, 401 etc.
+          description: RESPONSE_DESCRIPTION
+          content:
+            application/json:
+              schema:
+                type: array #(array, boolean, integer, number, object, string)
+                items:
+                  type: string
+                  example: "EXAMPLE_STRING"
+
+
+components:
+  schemas:
+    COMPONENT_NAME:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string          
+          
+          
+          
+          
+          
+          
+          
+          
