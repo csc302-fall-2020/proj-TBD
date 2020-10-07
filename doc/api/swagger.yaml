@@ -79,72 +79,139 @@ info:
   description: Description
   version: 1.0.0
 paths:
-  /ENDPOINT_NAME/{id}:
-    post:
+
+  # =============== FORMS
+  /forms/{FormID}:
+    get:
       tags:
-        - ENDPOINT_CATEGORY
-      summary: SUMMARY
-      description: OPTIONAL_DESCRIPTION
+        - Form
+      summary: Get an empty form
 
       parameters:
         - in: path
-          name: id   # Must be the same name as in the path
+          name: FormID
           required: true
           schema:
-            type: integer
-            minimum: 10 # e.g. anything below 10 is not accepted... we probably won't need this
-          description: The user ID
-        - in: query
-          name: QUERY_PARAM_NAME
-          required: false
-          schema:
-            default: 1
-            type: integer #(array, boolean, integer, number, object, string)
-          description: PARAM_DESCRIPTION
-
-      requestBody:
-        description: OPTIONAL_DESCRIPTION
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/COMPONENT_NAME'
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                name:          # <--- form field name
-                  type: string
-                fav_number:    # <--- form field name
-                  type: integer
-              required:
-                - name
-                - email
-          text/plain:
-            schema:
-              type: string
+            $ref: '#/components/schemas/FormID'
 
       responses:
-        '200': # 201, 401 etc.
-          description: RESPONSE_DESCRIPTION
-          content:
-            application/json:
-              schema:
-                type: array #(array, boolean, integer, number, object, string)
-                items:
-                  type: string
-                  example: "EXAMPLE_STRING"
+        '200':
+          $ref: '#/components/responses/SDCFormResponse'
+        '404':
+          $ref: '#/components/responses/404'
+
+  # =============== FORM RESPONSES
+  /form-responses/{FormResponseID}:
+    get:
+      tags:
+        - Form Responses
+      summary: Get a specific form response
+
+      parameters:
+        - in: path
+          name: FormResponseID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/SDCFormResponse'
+        '404':
+          $ref: '#/components/responses/404'
+  /form-responses/search:
+    get:
+      tags:
+        - Form Responses
+      summary: Search for form responses
+      responses:
+        '200':
+          $ref: '#/components/responses/SDCFormListResponse'
+  /form-responses:
+    post:
+      tags:
+        - Form Responses
+      summary: Create a form response
+      requestBody:
+        $ref: '#/components/requestBodies/SDCFormResponseBody'
+
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '404':
+          $ref: '#/components/responses/404'
 
 
 components:
   schemas:
-    COMPONENT_NAME:
+    DiagnosticProcedureID:
+      type: number
+      description: "Identifier for medical observation or test result"
+    PatientID:
+      type: number
+      description: "Identifier for a patient"
+    FormFillerID:
+      type: number
+      description: "Identifier for a doctor or other clinician"
+    FormID:
+      type: number
+      description: "Identifier for an SDC form template"
+    FormResponseID:
+      type: number
+      description: "Identifier for a specific form response"
+    SDCQuestion:
       type: object
+      description: "A question in a form"
+    SDCForm:
+      type: object
+      description: "An object that represents the structured data in an SDC xml file"
       properties:
-        id:
-          type: integer
-        name:
-          type: string          
+        FormResponseID:
+          $ref: '#/components/schemas/FormResponseID'
+        FormID:
+          $ref: '#/components/schemas/FormID'
+        DiagnosticProdedureID:
+          $ref: '#/components/schemas/DiagnosticProcedureID'
+        PatientID:
+          $ref: '#/components/schemas/PatientID'
+        FormFillerID:
+          $ref: '#/components/schemas/FormFillerID'
+    SDCFormResponse:
+      description: "An object describing the answers to a given form"
+      type: object
+  requestBodies:
+    SDCFormResponseBody:
+      description: "A request body for submitting a form response"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SDCForm'
+  responses:
+    201:
+      description: "Successfully created"
+    400:
+      description: "Bad request"
+    401:
+      description: "Unauthorized"
+    404:
+      description: "Resource not found"
+    SDCFormResponse:
+      description: "An SDC Form"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SDCForm'
+    SDCFormListResponse:
+      description: "A list of SDC Forms"
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SDCForm'
+
+
           
           
           
