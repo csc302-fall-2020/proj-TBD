@@ -95,8 +95,8 @@ paths:
             $ref: '#/components/schemas/FormID'
 
       responses:
-        '201':
-          $ref: '#/components/responses/201'
+        '200':
+          $ref: '#/components/responses/SDCForm'
         '404':
           $ref: '#/components/responses/404'
 
@@ -104,11 +104,11 @@ paths:
     get:
       tags:
         - Form
-      summary: Get a list of forms
+      summary: Get a list of empty forms
 
       responses:
         '200':
-          $ref: '#/components/responses/SDCFormResponseList'
+          $ref: '#/components/responses/SDCFormList'
         '404':
           $ref: '#/components/responses/404'
 
@@ -120,8 +120,8 @@ paths:
         $ref: '#/components/requestBodies/SDCFormBody'
 
       responses:
-        '200':
-          $ref: '#/components/responses/SDCFormList'
+        '201':
+          $ref: '#/components/responses/201'
 
   # =============== FORM RESPONSES
   /form-responses/{FormResponseID}:
@@ -183,9 +183,9 @@ components:
     SDCQuestion:
       type: object
       description: "A question in a form"
-    SDCForm:
+    SDCFormResponse:
       type: object
-      description: "An object that represents the structured data in an SDC xml file"
+      description: "An object that contains the response to a SDCForm" 
       properties:
         FormResponseID:
           $ref: '#/components/schemas/FormResponseID'
@@ -199,10 +199,17 @@ components:
           $ref: '#/components/schemas/FormFillerID'
     SDCFormMetaData:
       type: object
-      description: "An object that contains meta data form each form"
+      description: "An object that contains meta data from each form"
       properties:
         FormID:
           $ref: '#/components/schemas/FormID'
+    SDCForm:
+      type: object
+      description: "An object that represents the structured data in an SDC xml file"
+      properties:
+        FormID:
+          $ref: '#/components/schemas/FormID'
+
 
   requestBodies:
     SDCFormResponseBody:
@@ -229,11 +236,11 @@ components:
     403:
       description: "Forbidden"
     SDCFormResponse:
-      description: "An SDC Form"
+      description: "An SDC Form Response"
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SDCForm'
+            $ref: '#/components/schemas/SDCFormResponse'
     SDCFormResponseList:
       description: "A list of SDC Forms"
       content:
@@ -241,7 +248,13 @@ components:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/SDCForm'
+              $ref: '#/components/schemas/SDCFormResponse'
+    SDCForm:
+      description: "An SDC Form"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SDCForm'
     SDCFormList:
       description: "A list of SDC Forms"
       content:
