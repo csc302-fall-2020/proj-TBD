@@ -95,10 +95,33 @@ paths:
             $ref: '#/components/schemas/FormID'
 
       responses:
-        '200':
-          $ref: '#/components/responses/SDCFormResponse'
+        '201':
+          $ref: '#/components/responses/201'
         '404':
           $ref: '#/components/responses/404'
+
+  /forms:
+    get:
+      tags:
+        - Form
+      summary: Get a list of forms
+
+      responses:
+        '200':
+          $ref: '#/components/responses/SDCFormResponseList'
+        '404':
+          $ref: '#/components/responses/404'
+
+    post:
+      tags:
+        - Form
+      summary: Add a new form
+      requestBody:
+        $ref: '#/components/requestBodies/SDCFormBody'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/SDCFormList'
 
   # =============== FORM RESPONSES
   /form-responses/{FormResponseID}:
@@ -126,7 +149,7 @@ paths:
       summary: Search for form responses
       responses:
         '200':
-          $ref: '#/components/responses/SDCFormListResponse'
+          $ref: '#/components/responses/SDCFormResponseList'
   /form-responses:
     post:
       tags:
@@ -138,8 +161,6 @@ paths:
       responses:
         '201':
           $ref: '#/components/responses/201'
-        '404':
-          $ref: '#/components/responses/404'
 
 
 components:
@@ -176,9 +197,13 @@ components:
           $ref: '#/components/schemas/PatientID'
         FormFillerID:
           $ref: '#/components/schemas/FormFillerID'
-    SDCFormResponse:
-      description: "An object describing the answers to a given form"
+    SDCFormMetaData:
       type: object
+      description: "An object that contains meta data form each form"
+      properties:
+        FormID:
+          $ref: '#/components/schemas/FormID'
+
   requestBodies:
     SDCFormResponseBody:
       description: "A request body for submitting a form response"
@@ -187,6 +212,11 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SDCForm'
+    SDCFormBody:
+      description: "A request body for uploading an xml form"
+      required: true
+      content: {}
+
   responses:
     201:
       description: "Successfully created"
@@ -196,13 +226,15 @@ components:
       description: "Unauthorized"
     404:
       description: "Resource not found"
+    403:
+      description: "Forbidden"
     SDCFormResponse:
       description: "An SDC Form"
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/SDCForm'
-    SDCFormListResponse:
+    SDCFormResponseList:
       description: "A list of SDC Forms"
       content:
         application/json:
@@ -210,6 +242,14 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/SDCForm'
+    SDCFormList:
+      description: "A list of SDC Forms"
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SDCFormMetaData'
 
 
           
