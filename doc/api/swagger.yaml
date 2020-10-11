@@ -96,9 +96,32 @@ paths:
 
       responses:
         '200':
-          $ref: '#/components/responses/SDCFormResponse'
+          $ref: '#/components/responses/SDCForm'
         '404':
           $ref: '#/components/responses/404'
+
+  /forms:
+    get:
+      tags:
+        - Form
+      summary: Get a list of empty forms
+
+      responses:
+        '200':
+          $ref: '#/components/responses/SDCFormList'
+        '404':
+          $ref: '#/components/responses/404'
+
+    post:
+      tags:
+        - Form
+      summary: Add a new form
+      requestBody:
+        $ref: '#/components/requestBodies/SDCFormBody'
+
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
 
   # =============== FORM RESPONSES
   /form-responses/{FormResponseID}:
@@ -126,7 +149,7 @@ paths:
       summary: Search for form responses
       responses:
         '200':
-          $ref: '#/components/responses/SDCFormListResponse'
+          $ref: '#/components/responses/SDCFormResponseList'
   /form-responses:
     post:
       tags:
@@ -138,8 +161,6 @@ paths:
       responses:
         '201':
           $ref: '#/components/responses/201'
-        '404':
-          $ref: '#/components/responses/404'
 
 
 components:
@@ -162,9 +183,9 @@ components:
     SDCQuestion:
       type: object
       description: "A question in a form"
-    SDCForm:
+    SDCFormResponse:
       type: object
-      description: "An object that represents the structured data in an SDC xml file"
+      description: "An object that contains the response to a SDCForm" 
       properties:
         FormResponseID:
           $ref: '#/components/schemas/FormResponseID'
@@ -176,9 +197,20 @@ components:
           $ref: '#/components/schemas/PatientID'
         FormFillerID:
           $ref: '#/components/schemas/FormFillerID'
-    SDCFormResponse:
-      description: "An object describing the answers to a given form"
+    SDCFormMetaData:
       type: object
+      description: "An object that contains meta data from each form"
+      properties:
+        FormID:
+          $ref: '#/components/schemas/FormID'
+    SDCForm:
+      type: object
+      description: "An object that represents the structured data in an SDC xml file"
+      properties:
+        FormID:
+          $ref: '#/components/schemas/FormID'
+
+
   requestBodies:
     SDCFormResponseBody:
       description: "A request body for submitting a form response"
@@ -187,6 +219,11 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SDCForm'
+    SDCFormBody:
+      description: "A request body for uploading an xml form"
+      required: true
+      content: {}
+
   responses:
     201:
       description: "Successfully created"
@@ -196,20 +233,36 @@ components:
       description: "Unauthorized"
     404:
       description: "Resource not found"
+    403:
+      description: "Forbidden"
     SDCFormResponse:
-      description: "An SDC Form"
+      description: "An SDC Form Response"
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SDCForm'
-    SDCFormListResponse:
+            $ref: '#/components/schemas/SDCFormResponse'
+    SDCFormResponseList:
       description: "A list of SDC Forms"
       content:
         application/json:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/SDCForm'
+              $ref: '#/components/schemas/SDCFormResponse'
+    SDCForm:
+      description: "An SDC Form"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SDCForm'
+    SDCFormList:
+      description: "A list of SDC Forms"
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SDCFormMetaData'
 
 
           
