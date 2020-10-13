@@ -15,3 +15,6 @@ app.config['MONGODB_SETTINGS'] = {
 db = MongoEngine()
 db.init_app(app)
 
+@app.route("/api")
+def index():
+    return Response({"status": 200}, mimetype="application/json", status=200)
