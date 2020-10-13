@@ -10,3 +10,47 @@ services:
             - ${CODE_DIR}/frontend/public:/app/public
         working_dir: /app
         command: ["/usr/local/bin/npm", "start"]
+        networks:
+            - frontend
+
+    mongodb:
+        image: mongo
+        container_name: mongo
+        restart: unless-stopped
+        command: mongod --auth
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: "admin"
+            MONGO_INITDB_ROOT_PASSWORD: "password"
+            MONGO_INITDB_DATABASE: nametbd
+            MONGODB_DATA_DIR: /data/db
+        volumes:
+            - mongodbdata:/data/db
+        networks:
+            - backend
+
+    api:
+        image: tomac7/name-tbd:backend
+        tty: true
+        command: gunicorn --reload --bind 0.0.0.0:5000 app:app 
+        ports:
+            - 5000:5000
+        environment:
+            MONGODB_HOST: mongodb
+            MONGODB_USERNAME: "admin"
+            MONGODB_PASSWORD: "password"
+        depends_on:
+            - mongodb
+        volumes:
+            - ${CODE_DIR}/backend:/app
+        networks:
+            - frontend
+            - backend
+networks:
+    frontend:
+        driver: bridge
+    backend:
+        driver: bridge
+
+volumes:
+    mongodbdata:
+        driver: local
