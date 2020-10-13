@@ -1,4 +1,3 @@
-
 # DOCUMENTATION
 # https://swagger.io/docs/specification/about/
 
@@ -124,7 +123,7 @@ paths:
           $ref: '#/components/responses/201'
 
   # =============== FORM RESPONSES
-  /form-responses/{FormResponseID}:
+  /forms/{FormID}/form-responses/{FormResponseID}:
     get:
       tags:
         - Form Responses
@@ -136,21 +135,38 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/FormResponseID'
+        - in: path
+          name: FormID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
 
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponse'
         '404':
           $ref: '#/components/responses/404'
-  /form-responses/search:
+  /forms/{FormID}/form-responses/search:
     get:
+      parameters:
+        - in: path
+          name: FormID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
       tags:
         - Form Responses
       summary: Search for form responses
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponseList'
-  /form-responses:
+  /forms/{FormID}/form-responses:
+    parameters:
+      - in: path
+        name: FormID
+        required: true
+        schema:
+          $ref: '#/components/schemas/FormResponseID'
     post:
       tags:
         - Form Responses
@@ -265,11 +281,3 @@ components:
               $ref: '#/components/schemas/SDCFormMetaData'
 
 
-          
-          
-          
-          
-          
-          
-          
-          
