@@ -6,10 +6,8 @@ services:
         ports:
             - 3000:3000
         volumes:
-            - ${CODE_DIR}/frontend/src:/app/src
-            - ${CODE_DIR}/frontend/public:/app/public
-            - ${CODE_DIR}/frontend/node_modules:/app/node_modules
-        working_dir: /app
+            - ${CODE_DIR}/frontend:/app/frontend
+        working_dir: /app/frontend
         command: ["/usr/local/bin/npm", "start"]
         networks:
             - frontend
