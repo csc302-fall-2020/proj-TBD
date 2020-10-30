@@ -104,7 +104,7 @@ paths:
     get:
       tags:
         - Form
-      summary: Get a list of empty forms
+      summary: Get a list of empty forms' MetaData
       
       parameters: 
         - name: FormID
@@ -119,7 +119,7 @@ paths:
 
       responses:
         '200':
-          $ref: '#/components/responses/SDCFormList'
+          $ref: '#/components/responses/SDCFormMetaDataList'
         '404':
           $ref: '#/components/responses/404'
 
@@ -217,6 +217,9 @@ components:
     FormResponseID:
       type: number
       description: "Identifier for a specific form response"
+    FormName:
+      type: string
+      description: "Form name"
     SDCQuestion:
       type: object
       description: "A question in a form"
@@ -228,7 +231,7 @@ components:
           description: "The question to be asked for a SDC form question in String form"
         QuestionType:
           type: string
-          description: "Identifier for an SDC form question"
+          description: "Type for an SDC form question"
         enabled: 
           type: boolean
     SDCMultipleChoiceQuestion:
@@ -281,7 +284,7 @@ components:
               - $ref: '#/components/schemas/SDCTrueFalseQuestion'
           discriminator:
             propertyName: QuestionType
-    SDCFormAnswer:
+    SDCAnswer:
       type: object
       description: "The object containing the answer and metadata to a question in a SDC form"
       properties:
@@ -289,26 +292,26 @@ components:
           $ref: '#/components/schemas/QuestionID'
         AnswerType:
           type: string
-          description: "The type of the answe"
+          description: "The type of the answer"
         Answer:
           type: string
-          description: "The answer object for a SDC form question"
-    SDCFormMultipleChoiceAnswer:
+          description: "The answer string for a SDC form question"
+    SDCMultipleChoiceAnswer:
       allOf:
-      - $ref: '#/components/schemas/SDCFormAnswer'
+      - $ref: '#/components/schemas/SDCAnswer'
       - type: object
-      - description: "An answer to an multiple choice question"
-    SDCFormTrueFalseAnswer:
+      - description: "An answer to a multiple choice question"
+    SDCTrueFalseAnswer:
       allOf:
-      - $ref: '#/components/schemas/SDCFormAnswer'
+      - $ref: '#/components/schemas/SDCAnswer'
       - type: object
-      - description: "An answer to an True/False question"
-    SDCFormRadioAnswer:
+      - description: "An answer to a True/False question"
+    SDCRadioAnswer:
       allOf:
-      - $ref: '#/components/schemas/SDCFormAnswer'
+      - $ref: '#/components/schemas/SDCAnswer'
       - type: object
-      - description: "An answer to an Radio question"
-    SDCFormBody:
+      - description: "An answer to a Radio question"
+    SDCSection:
       type: object
       description: "An object that represents a section in an SDC xml file"
       properties:
@@ -331,10 +334,15 @@ components:
           $ref: '#/components/schemas/FormID'
         DiagnosticProcedureID:
           $ref: '#/components/schemas/DiagnosticProcedureID'
-        FormBody:
+        FormName:
+          $ref: '#/components/schemas/FormName'
+        Version:
+          type: number
+          description: "Version number for the form"
+        FormSections:
           type: array
           items:
-            $ref: '#/components/schemas/SDCFormBody'
+            $ref: '#/components/schemas/SDCSection'
     SDCFormResponse:
       type: object
       description: "An object that contains the response to a SDCForm" 
@@ -353,12 +361,22 @@ components:
           type: object
           additionalProperties:
             anyOf:
-            - $ref: '#/components/schemas/SDCFormAnswer'
-            - $ref: '#/components/schemas/SDCFormRadioAnswer'
-            - $ref: '#/components/schemas/SDCFormMultipleChoiceAnswer'
-            - $ref: '#/components/schemas/SDCFormTrueFalseAnswer'
+            - $ref: '#/components/schemas/SDCAnswer'
+            - $ref: '#/components/schemas/SDCRadioAnswer'
+            - $ref: '#/components/schemas/SDCMultipleChoiceAnswer'
+            - $ref: '#/components/schemas/SDCTrueFalseAnswer'
           discriminator:
             propertyName: AnswerType
+    SDCFormMetaData:
+        type: object
+        description: "An object containing MetaData to a SDCForm"
+        properties:
+          FormID:
+            $ref: '#/components/schemas/FormID'
+          DiagnosticProdedureID:
+            $ref: '#/components/schemas/DiagnosticProcedureID'
+          FormName:
+            $ref: '#/components/schemas/FormName'
               
 
 
@@ -409,14 +427,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SDCForm'
-    SDCFormList:
-      description: "A list of SDC Forms ID"
+    SDCFormMetaDataList:
+      description: "A list of SDC Forms' MetaData"
       content:
         application/json:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/FormID'
+              $ref: '#/components/schemas/SDCFormMetaData'
 
 
           
