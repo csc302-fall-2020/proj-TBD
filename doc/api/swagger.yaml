@@ -234,6 +234,20 @@ components:
           description: "Type for an SDC form question"
         enabled: 
           type: boolean
+          description: "Whether the question is enabled/disabled in the form"
+        order:
+          type: number
+          description: "Order of the question in the form"
+        DependentQuestions:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/SDCQuestion'
+              - $ref: '#/components/schemas/SDCMultipleChoiceQuestion'
+              - $ref: '#/components/schemas/SDCRadioQuestion'
+              - $ref: '#/components/schemas/SDCTrueFalseQuestion'
+          discriminator:
+            propertyName: QuestionType
     SDCMultipleChoiceQuestion:
       allOf:
       - type: object
@@ -259,31 +273,6 @@ components:
       - $ref: '#/components/schemas/SDCQuestion'
       - type: object
       - description: "An True/False question in a form"
-    SDCControlQuestion:
-      description: "A depenndent question in a form"
-      allOf:
-      - type: object
-      properties:
-        ControlQuestion:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/SDCQuestion'
-            - $ref: '#/components/schemas/SDCMultipleChoiceQuestion'
-            - $ref: '#/components/schemas/SDCRadioQuestion'
-            - $ref: '#/components/schemas/SDCTrueFalseQuestion'
-          discriminator:
-            propertyName: QuestionType
-        DependentQuestion:
-          type: array
-          items:
-            anyOf:
-              - $ref: '#/components/schemas/SDCQuestion'
-              - $ref: '#/components/schemas/SDCMultipleChoiceQuestion'
-              - $ref: '#/components/schemas/SDCRadioQuestion'
-              - $ref: '#/components/schemas/SDCControlQuestion'
-              - $ref: '#/components/schemas/SDCTrueFalseQuestion'
-          discriminator:
-            propertyName: QuestionType
     SDCAnswer:
       type: object
       description: "The object containing the answer and metadata to a question in a SDC form"
@@ -322,7 +311,6 @@ components:
             - $ref: '#/components/schemas/SDCQuestion'
             - $ref: '#/components/schemas/SDCMultipleChoiceQuestion'
             - $ref: '#/components/schemas/SDCRadioQuestion'
-            - $ref: '#/components/schemas/SDCControlQuestion'
             - $ref: '#/components/schemas/SDCTrueFalseQuestion'
           discriminator:
             propertyName: QuestionType
