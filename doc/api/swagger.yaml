@@ -159,21 +159,12 @@ paths:
           $ref: '#/components/responses/404'
   /forms/{FormID}/form-responses/search:
     get:
-      parameters:
+      parameters: 
         - in: path
           name: FormID
           required: true
           schema:
             $ref: '#/components/schemas/FormResponseID'
-      tags:
-        - Form Responses
-      summary: Search for form responses
-      
-      parameters: 
-        - name: FormID
-          in: query
-          schema:
-            $ref: '#/components/schemas/FormID'
         - name: FormFillerID
           in: query
           schema:
@@ -190,18 +181,17 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/FormResponseID'
-            
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponseList'
   /forms/{FormID}/form-responses:
-    parameters:
+    post:
+      parameters:
       - in: path
         name: FormID
         required: true
         schema:
           $ref: '#/components/schemas/FormResponseID'
-    post:
       tags:
         - Form Responses
       summary: Create a form response
