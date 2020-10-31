@@ -1,4 +1,3 @@
-
 # DOCUMENTATION
 # https://swagger.io/docs/specification/about/
 
@@ -135,7 +134,7 @@ paths:
           $ref: '#/components/responses/201'
 
   # =============== FORM RESPONSES
-  /form-responses/{FormResponseID}:
+  /forms/{FormID}/form-responses/{FormResponseID}:
     get:
       tags:
         - Form Responses
@@ -147,23 +146,25 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/FormResponseID'
+        - in: path
+          name: FormID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
 
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponse'
         '404':
           $ref: '#/components/responses/404'
-  /form-responses/search:
+  /forms/{FormID}/form-responses/search:
     get:
-      tags:
-        - Form Responses
-      summary: Search for form responses
-      
       parameters: 
-        - name: FormID
-          in: query
+        - in: path
+          name: FormID
+          required: true
           schema:
-            $ref: '#/components/schemas/FormID'
+            $ref: '#/components/schemas/FormResponseID'
         - name: FormFillerID
           in: query
           schema:
@@ -180,12 +181,17 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/FormResponseID'
-            
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponseList'
-  /form-responses:
+  /forms/{FormID}/form-responses:
     post:
+      parameters:
+      - in: path
+        name: FormID
+        required: true
+        schema:
+          $ref: '#/components/schemas/FormResponseID'
       tags:
         - Form Responses
       summary: Create a form response
@@ -425,11 +431,3 @@ components:
               $ref: '#/components/schemas/SDCFormMetaData'
 
 
-          
-          
-          
-          
-          
-          
-          
-          
