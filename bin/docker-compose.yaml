@@ -19,8 +19,8 @@ services:
         command: mongod --auth
         environment:
             MONGO_INITDB_ROOT_USERNAME: "admin"
-            MONGO_INITDB_ROOT_PASSWORD: "password"
-            MONGO_INITDB_DATABASE: nametbd
+            MONGO_INITDB_ROOT_PASSWORD: "admin"
+            MONGO_INITDB_DATABASE: SDC
             MONGODB_DATA_DIR: /data/db
         volumes:
             - mongodbdata:/data/db
@@ -34,9 +34,9 @@ services:
         ports:
             - 5000:5000
         environment:
-            MONGODB_HOST: mongodb
+            MONGODB_HOST: sdc.fbrhz.mongodb.net
             MONGODB_USERNAME: "admin"
-            MONGODB_PASSWORD: "password"
+            MONGODB_PASSWORD: "admin"
         depends_on:
             - mongodb
         volumes:
