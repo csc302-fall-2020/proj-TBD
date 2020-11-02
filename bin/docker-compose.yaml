@@ -41,6 +41,7 @@ services:
             MONGODB_PASSWORD: "passtbd"
             MONGODB_DB: "SDC"
             HOST_NAME: "api_host"
+            USER: "usertbd"
         depends_on:
             - mongodb
         volumes:
