@@ -5,17 +5,14 @@ from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
 APP = Flask(__name__)
-
-os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
-os.environ['MONGODB_USERNAME'] = 'admin'
-os.environ['MONGODB_PASSWORD'] = 'admin'
-os.environ['MONGODB_DB'] = 'SDC'
-
 APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
 FORM_TABLE = DB.forms
 FORM_RESPONSE_TABLE = DB.form_responses
+
+DEFAULT_LIMIT = 20
 
 
 @APP.route('/')
@@ -35,6 +32,8 @@ def offset_and_limit(form_lst):
         form_lst = form_lst[offset:]
     if limit is not None:
         form_lst = form_lst[:limit]
+    else:
+        form_lst = form_lst[:DEFAULT_LIMIT]
 
     return form_lst
 
@@ -68,9 +67,6 @@ def query_form(FormID, DiagnosticProcedureID):
         search_query['FormID'] = int(FormID)
     if DiagnosticProcedureID is not None:
         search_query['DiagnosticProcedureID'] = int(DiagnosticProcedureID)
-
-    if len(search_query) == 0:
-        abort(400)  # missing parameters!
 
     match_forms = FORM_TABLE.find(search_query, {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'})
 

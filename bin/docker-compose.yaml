@@ -14,29 +14,33 @@ services:
 
     mongodb:
         image: mongo
-        container_name: mongo
         restart: unless-stopped
         command: mongod --auth
+        ports:
+            - 27017:27017
         environment:
             MONGO_INITDB_ROOT_USERNAME: "admin"
             MONGO_INITDB_ROOT_PASSWORD: "admin"
             MONGO_INITDB_DATABASE: SDC
             MONGODB_DATA_DIR: /data/db
         volumes:
-            - mongodbdata:/data/db
+            - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
         networks:
             - backend
+            - frontend
 
     api:
         image: tomac7/name-tbd:backend
         tty: true
-        command: gunicorn --reload --bind 0.0.0.0:5000 app:app 
+        command: gunicorn --reload --bind 0.0.0.0:5000 app:APP
         ports:
             - 5000:5000
         environment:
-            MONGODB_HOST: sdc.fbrhz.mongodb.net
-            MONGODB_USERNAME: "admin"
-            MONGODB_PASSWORD: "admin"
+            MONGODB_HOST: mongodb
+            MONGODB_USERNAME: "nametbd"
+            MONGODB_PASSWORD: "passtbd"
+            MONGODB_DB: "SDC"
+            HOST_NAME: "api_host"
         depends_on:
             - mongodb
         volumes:
