@@ -7,7 +7,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
 const server = setupServer(
-    rest.get('/test', (req, res, ctx) => {
+    rest.get('localhost:5000/test', (req, res, ctx) => {
         return res(ctx.text('hello there'));
     })
 );
