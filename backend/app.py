@@ -5,12 +5,14 @@ from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
 APP = Flask(__name__)
-
 APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
 FORM_TABLE = DB.forms
 FORM_RESPONSE_TABLE = DB.form_responses
+
+DEFAULT_LIMIT = 20
 
 
 @APP.route('/')
@@ -20,6 +22,20 @@ def index():
 
 def remove_id_col(form_lst):
     [x.pop('_id') for x in form_lst]
+
+
+def offset_and_limit(form_lst):
+    offset = request.args.get('offset')
+    limit = request.args.get('limit')
+
+    if offset is not None:
+        form_lst = form_lst[offset:]
+    if limit is not None:
+        form_lst = form_lst[:limit]
+    else:
+        form_lst = form_lst[:DEFAULT_LIMIT]
+
+    return form_lst
 
 
 def get_latest_form(form_lst):
@@ -52,9 +68,6 @@ def query_form(FormID, DiagnosticProcedureID):
     if DiagnosticProcedureID is not None:
         search_query['DiagnosticProcedureID'] = int(DiagnosticProcedureID)
 
-    if len(search_query) == 0:
-        abort(400)  # missing parameters!
-
     match_forms = FORM_TABLE.find(search_query, {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'})
 
     form_lst = list(match_forms)
@@ -77,10 +90,13 @@ def query_form(FormID, DiagnosticProcedureID):
     for formID in form_dict:
         latest_form_lst.append(get_latest_form(form_dict[formID]))
 
+    latest_form_lst = offset_and_limit(latest_form_lst)
+
     return jsonify(latest_form_lst), 200
 
 
 def xml_to_json(file_data):
+
 
     return file_data
 
@@ -153,6 +169,8 @@ def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, Form
         abort(404)
 
     else:
+        form_lst = offset_and_limit(form_lst)
+
         return jsonify(form_lst), 200
 
 
