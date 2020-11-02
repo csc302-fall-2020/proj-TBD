@@ -159,7 +159,7 @@ def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, Form
     if len(search_query) == 0:
         abort(400)  # missing parameters!
 
-    match_forms = FORM_TABLE.find(search_query)
+    match_forms = FORM_RESPONSE_TABLE.find(search_query)
 
     form_lst = list(match_forms)
 
