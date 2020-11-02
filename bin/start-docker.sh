@@ -7,6 +7,7 @@ export HOME_DIR=$HOME
 export MONGODB_USERNAME="nametbd"
 export MONGODB_HOST="passtbd"
 export MONGODB_DB="SDC"
+export USER="proj-TBD"
 compose_cmd="docker-compose -p $USER -f docker-compose.yaml"
 $compose_cmd up -d
 
