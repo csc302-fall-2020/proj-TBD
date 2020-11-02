@@ -3,14 +3,13 @@ import os
 
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
-#import xml.etree.ElementTree as ET
 
 APP = Flask(__name__)
 
-#os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
-#os.environ['MONGODB_USERNAME'] = 'admin'
-#os.environ['MONGODB_PASSWORD'] = 'admin'
-#os.environ['MONGODB_DB'] = 'SDC'
+os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
+os.environ['MONGODB_USERNAME'] = 'admin'
+os.environ['MONGODB_PASSWORD'] = 'admin'
+os.environ['MONGODB_DB'] = 'SDC'
 
 APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 CLUSTER = PyMongo(APP)
@@ -26,6 +25,18 @@ def index():
 
 def remove_id_col(form_lst):
     [x.pop('_id') for x in form_lst]
+
+
+def offset_and_limit(form_lst):
+    offset = request.args.get('offset')
+    limit = request.args.get('limit')
+
+    if offset is not None:
+        form_lst = form_lst[offset:]
+    if limit is not None:
+        form_lst = form_lst[:limit]
+
+    return form_lst
 
 
 def get_latest_form(form_lst):
@@ -83,10 +94,13 @@ def query_form(FormID, DiagnosticProcedureID):
     for formID in form_dict:
         latest_form_lst.append(get_latest_form(form_dict[formID]))
 
+    latest_form_lst = offset_and_limit(latest_form_lst)
+
     return jsonify(latest_form_lst), 200
 
 
 def xml_to_json(file_data):
+
 
     return file_data
 
@@ -159,6 +173,8 @@ def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, Form
         abort(404)
 
     else:
+        form_lst = offset_and_limit(form_lst)
+
         return jsonify(form_lst), 200
 
 
