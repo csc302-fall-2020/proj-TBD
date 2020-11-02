@@ -158,6 +158,9 @@ paths:
         '404':
           $ref: '#/components/responses/404'
   /forms/{FormID}/form-responses/search:
+    tags:
+      - Form Responses
+    summary: Search for form responses
     get:
       parameters: 
         - in: path
