@@ -173,5 +173,12 @@ def response_processing():
         return jsonify(success=True), 201
 
 
+@APP.route('/test', methods=['GET', 'POST'])
+def test_route():
+    if request.method == 'GET':
+        return jsonify(success=True)
+    else:
+        return jsonify(success=True, body=request.get_json())
+
 if __name__ == '__main__':
     APP.run(debug=True)
