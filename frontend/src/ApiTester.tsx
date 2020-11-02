@@ -47,7 +47,7 @@ const ApiTester: React.FC<ApiTesterProps> = ({ defaultRoute }) => {
         if (loading) return;
 
         setLoading(true);
-        const url = `/${route}`;
+        const url = `localhost:5000/${route}`;
         let data = '';
         let error: string | undefined;
         try {
