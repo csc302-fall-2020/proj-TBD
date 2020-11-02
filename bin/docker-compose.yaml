@@ -30,13 +30,15 @@ services:
     api:
         image: tomac7/name-tbd:backend
         tty: true
-        command: gunicorn --reload --bind 0.0.0.0:5000 app:app 
+        command: gunicorn --reload --bind 0.0.0.0:5000 app:APP
         ports:
             - 5000:5000
         environment:
-            MONGODB_HOST: sdc.fbrhz.mongodb.net
+            MONGODB_HOST: mongodb
             MONGODB_USERNAME: "admin"
             MONGODB_PASSWORD: "admin"
+            MONGODB_DB: "SDC"
+            HOST_NAME: "api_host"
         depends_on:
             - mongodb
         volumes:
