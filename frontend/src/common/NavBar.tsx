@@ -6,15 +6,34 @@ import styled from 'styled-components';
 const { Text } = Typography;
 
 const Header = styled.div`
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: center;
+`;
+
+const InnerWrapper = styled.div`
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #f0f0f0;
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 20px 0 20px;
 `;
 
 const StyledMenu = styled(Menu)`
     border: none;
+`;
+
+const PageWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+`;
+
+const InnerPageWrapper = styled.div`
+    max-width: 1000px;
+    width: 100%;
+    margin: 20px;
 `;
 
 type Tab = { tabName: string; route: string };
@@ -29,18 +48,22 @@ const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
     return (
         <div>
             <Header>
-                <Text>Hello, Dr.</Text>
-                <StyledMenu
-                    mode="horizontal"
-                    selectedKeys={[selectedRoute]}
-                    onClick={({ key: route }) => history.push(`/${clinicianID}${route}`)}
-                >
-                    {tabs.map(({ tabName, route }) => (
-                        <Menu.Item key={route}>{tabName}</Menu.Item>
-                    ))}
-                </StyledMenu>
+                <InnerWrapper>
+                    <Text>Hello, Dr.</Text>
+                    <StyledMenu
+                        mode="horizontal"
+                        selectedKeys={[selectedRoute]}
+                        onClick={({ key: route }) => history.push(`/${clinicianID}${route}`)}
+                    >
+                        {tabs.map(({ tabName, route }) => (
+                            <Menu.Item key={route}>{tabName}</Menu.Item>
+                        ))}
+                    </StyledMenu>
+                </InnerWrapper>
             </Header>
-            {children}
+            <PageWrapper>
+                <InnerPageWrapper>{children}</InnerPageWrapper>
+            </PageWrapper>
         </div>
     );
 };
