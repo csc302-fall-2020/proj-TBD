@@ -1,0 +1,57 @@
+version: '3.7'
+services:
+    client:
+        image: tomac7/name-tbd:frontend
+        tty: true
+        ports:
+            - 3000:3000
+        volumes:
+            - ${CODE_DIR}/frontend:/app
+        working_dir: /app
+        command: ["/usr/local/bin/npm", "start"]
+        networks:
+            - frontend
+
+    mongodb:
+        image: tomac7/name-tbd:mongo
+        restart: unless-stopped
+        command: mongod --auth
+        ports:
+            - 27017:27017
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: "admin"
+            MONGO_INITDB_ROOT_PASSWORD: "admin"
+            MONGO_INITDB_DATABASE: SDC
+            MONGODB_DATA_DIR: /data/db
+        networks:
+            - backend
+            - frontend
+
+    api:
+        image: tomac7/name-tbd:backend
+        tty: true
+        command: python app.py -debug
+        ports:
+            - 5000:5000
+        environment:
+            MONGODB_HOST: mongodb
+            MONGODB_USERNAME: "nametbd"
+            MONGODB_PASSWORD: "passtbd"
+            MONGODB_DB: "SDC"
+            HOST_NAME: "api_host"
+        depends_on:
+            - mongodb
+        volumes:
+            - ${CODE_DIR}/backend:/app
+        networks:
+            - frontend
+            - backend
+networks:
+    frontend:
+        driver: bridge
+    backend:
+        driver: bridge
+
+volumes:
+    mongodbdata:
+        driver: local

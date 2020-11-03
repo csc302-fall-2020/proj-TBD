@@ -103,11 +103,22 @@ paths:
     get:
       tags:
         - Form
-      summary: Get a list of empty forms
+      summary: Get a list of empty forms' MetaData
+      
+      parameters: 
+        - name: FormID
+          in: query
+          schema:
+            $ref: '#/components/schemas/FormID'
+        - name: DiagnosticProcedureID
+          in: query
+          schema:
+            $ref: '#/components/schemas/DiagnosticProcedureID'
+        
 
       responses:
         '200':
-          $ref: '#/components/responses/SDCFormList'
+          $ref: '#/components/responses/SDCFormMetaDataList'
         '404':
           $ref: '#/components/responses/404'
 
@@ -148,26 +159,42 @@ paths:
           $ref: '#/components/responses/404'
   /forms/{FormID}/form-responses/search:
     get:
-      parameters:
+      tags:		
+         - Form Responses		
+      summary: Search for form responses
+      parameters: 
         - in: path
           name: FormID
           required: true
           schema:
             $ref: '#/components/schemas/FormResponseID'
-      tags:
-        - Form Responses
-      summary: Search for form responses
+        - name: FormFillerID
+          in: query
+          schema:
+            $ref: '#/components/schemas/FormFillerID'
+        - name: DiagnosticProcedureID
+          in: query
+          schema:
+            $ref: '#/components/schemas/DiagnosticProcedureID'
+        - name: PatientID
+          in: query
+          schema:
+            $ref: '#/components/schemas/PatientID'
+        - name: FormResponseID
+          in: query
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponseList'
   /forms/{FormID}/form-responses:
-    parameters:
+    post:
+      parameters:
       - in: path
         name: FormID
         required: true
         schema:
           $ref: '#/components/schemas/FormResponseID'
-    post:
       tags:
         - Form Responses
       summary: Create a form response
@@ -193,12 +220,126 @@ components:
     FormID:
       type: number
       description: "Identifier for an SDC form template"
+    QuestionID:
+      type: number
+      description: "Identifier for an SDC form question"
     FormResponseID:
       type: number
       description: "Identifier for a specific form response"
+    FormName:
+      type: string
+      description: "Form name"
     SDCQuestion:
       type: object
       description: "A question in a form"
+      properties:
+        QuestionID:
+          $ref: '#/components/schemas/QuestionID'
+        QuestionString:
+          type: string
+          description: "The question to be asked for a SDC form question in String form"
+        QuestionType:
+          type: string
+          description: "Type for an SDC form question"
+        enabled: 
+          type: boolean
+          description: "Whether the question is enabled/disabled in the form"
+        order:
+          type: number
+          description: "Order of the question in the form"
+        DependentQuestions:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/SDCQuestion'
+              - $ref: '#/components/schemas/SDCMultipleChoiceQuestion'
+              - $ref: '#/components/schemas/SDCRadioQuestion'
+              - $ref: '#/components/schemas/SDCTrueFalseQuestion'
+          discriminator:
+            propertyName: QuestionType
+    SDCMultipleChoiceQuestion:
+      allOf:
+      - type: object
+      - $ref: '#/components/schemas/SDCQuestion'
+      - description: "An Multiple Choice question in a form"
+      properties:
+        options:
+          type: array
+          items:
+            type: string
+    SDCRadioQuestion:
+      allOf:
+      - $ref: '#/components/schemas/SDCQuestion'
+      - type: object
+      - description: "An Radio question in a form"
+      properties:
+        options:
+          type: array
+          items:
+            type: string
+    SDCTrueFalseQuestion:
+      allOf:
+      - $ref: '#/components/schemas/SDCQuestion'
+      - type: object
+      - description: "An True/False question in a form"
+    SDCAnswer:
+      type: object
+      description: "The object containing the answer and metadata to a question in a SDC form"
+      properties:
+        QuestionID:
+          $ref: '#/components/schemas/QuestionID'
+        AnswerType:
+          type: string
+          description: "The type of the answer"
+        Answer:
+          type: string
+          description: "The answer string for a SDC form question"
+    SDCMultipleChoiceAnswer:
+      allOf:
+      - $ref: '#/components/schemas/SDCAnswer'
+      - type: object
+      - description: "An answer to a multiple choice question"
+    SDCTrueFalseAnswer:
+      allOf:
+      - $ref: '#/components/schemas/SDCAnswer'
+      - type: object
+      - description: "An answer to a True/False question"
+    SDCRadioAnswer:
+      allOf:
+      - $ref: '#/components/schemas/SDCAnswer'
+      - type: object
+      - description: "An answer to a Radio question"
+    SDCSection:
+      type: object
+      description: "An object that represents a section in an SDC xml file"
+      properties:
+        Questions:
+          type: array
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/SDCQuestion'
+            - $ref: '#/components/schemas/SDCMultipleChoiceQuestion'
+            - $ref: '#/components/schemas/SDCRadioQuestion'
+            - $ref: '#/components/schemas/SDCTrueFalseQuestion'
+          discriminator:
+            propertyName: QuestionType
+    SDCForm:
+      type: object
+      description: "An object that represents the structured data in an SDC xml file"
+      properties:
+        FormID:
+          $ref: '#/components/schemas/FormID'
+        DiagnosticProcedureID:
+          $ref: '#/components/schemas/DiagnosticProcedureID'
+        FormName:
+          $ref: '#/components/schemas/FormName'
+        Version:
+          type: number
+          description: "Version number for the form"
+        FormSections:
+          type: array
+          items:
+            $ref: '#/components/schemas/SDCSection'
     SDCFormResponse:
       type: object
       description: "An object that contains the response to a SDCForm" 
@@ -213,18 +354,27 @@ components:
           $ref: '#/components/schemas/PatientID'
         FormFillerID:
           $ref: '#/components/schemas/FormFillerID'
+        Answers:
+          type: object
+          additionalProperties:
+            anyOf:
+            - $ref: '#/components/schemas/SDCAnswer'
+            - $ref: '#/components/schemas/SDCRadioAnswer'
+            - $ref: '#/components/schemas/SDCMultipleChoiceAnswer'
+            - $ref: '#/components/schemas/SDCTrueFalseAnswer'
+          discriminator:
+            propertyName: AnswerType
     SDCFormMetaData:
-      type: object
-      description: "An object that contains meta data from each form"
-      properties:
-        FormID:
-          $ref: '#/components/schemas/FormID'
-    SDCForm:
-      type: object
-      description: "An object that represents the structured data in an SDC xml file"
-      properties:
-        FormID:
-          $ref: '#/components/schemas/FormID'
+        type: object
+        description: "An object containing MetaData to a SDCForm"
+        properties:
+          FormID:
+            $ref: '#/components/schemas/FormID'
+          DiagnosticProdedureID:
+            $ref: '#/components/schemas/DiagnosticProcedureID'
+          FormName:
+            $ref: '#/components/schemas/FormName'
+              
 
 
   requestBodies:
@@ -234,11 +384,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SDCForm'
+            $ref: '#/components/schemas/SDCFormResponse'
     SDCFormBody:
       description: "A request body for uploading an xml form"
       required: true
-      content: {}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SDCForm'
 
   responses:
     201:
@@ -271,8 +424,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SDCForm'
-    SDCFormList:
-      description: "A list of SDC Forms"
+    SDCFormMetaDataList:
+      description: "A list of SDC Forms' MetaData"
       content:
         application/json:
           schema:
