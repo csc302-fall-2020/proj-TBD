@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, Typography } from 'antd';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams, NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 
 const { Text } = Typography;
@@ -42,7 +42,6 @@ type ParamTypes = { clinicianID: string };
 
 const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
     const selectedRoute = tabs[indexSelected].route;
-    const history = useHistory();
     const { clinicianID } = useParams<ParamTypes>();
 
     return (
@@ -53,10 +52,11 @@ const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
                     <StyledMenu
                         mode="horizontal"
                         selectedKeys={[selectedRoute]}
-                        onClick={({ key: route }) => history.push(`/${clinicianID}${route}`)}
                     >
                         {tabs.map(({ tabName, route }) => (
-                            <Menu.Item key={route} data-testid={tabName}>{tabName}</Menu.Item>
+                            <Menu.Item key={route}>
+                                <NavLink to={`/${clinicianID}${route}`} data-testid={tabName}>{tabName}</NavLink>
+                            </Menu.Item>
                         ))}
                     </StyledMenu>
                 </InnerWrapper>
