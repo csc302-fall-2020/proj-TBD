@@ -46,7 +46,7 @@ const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
     const { clinicianID } = useParams<ParamTypes>();
 
     return (
-        <div>
+        <div data-testid="nav-bar">
             <Header>
                 <InnerWrapper>
                     <Text>Hello, Dr.</Text>
@@ -56,7 +56,7 @@ const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
                         onClick={({ key: route }) => history.push(`/${clinicianID}${route}`)}
                     >
                         {tabs.map(({ tabName, route }) => (
-                            <Menu.Item key={route}>{tabName}</Menu.Item>
+                            <Menu.Item key={route} data-testid={tabName}>{tabName}</Menu.Item>
                         ))}
                     </StyledMenu>
                 </InnerWrapper>

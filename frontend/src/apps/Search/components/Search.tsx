@@ -4,7 +4,7 @@ import styled from 'styled-components';
 export type Props = {};
 
 const Search: React.FC<Props> = () => {
-    return <div>Search Page</div>;
+    return <div data-testid="search-page">Search Page</div>;
 };
 
 export default Search;

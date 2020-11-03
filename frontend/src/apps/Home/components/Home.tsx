@@ -4,7 +4,7 @@ import styled from 'styled-components';
 export type Props = {};
 
 const Home: React.FC<Props> = () => {
-    return <div>Home Page</div>;
+    return <div data-testid="home-page">Home Page</div>;
 };
 
 export default Home;
