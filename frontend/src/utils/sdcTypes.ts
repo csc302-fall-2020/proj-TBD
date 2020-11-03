@@ -3,8 +3,15 @@ export const SDC_QUESTION_TYPE_MULTIPLE_CHOICE = 'multipleChoice';
 export const SDC_QUESTION_TYPE_RADIO = 'radio';
 export const SDC_QUESTION_TYPE_TRUE_FALSE = 'trueFalse';
 
+export type DiagnosticProcedureID = string;
+export type PatientID = string;
+export type FormFillerID = string;
+export type FormID = string;
+export type QuestionID = string;
+export type FormResponseID = string;
+
 interface SDCQuestionBase<T extends string> {
-    QuestionID: number;
+    QuestionID: QuestionID;
     QuestionString: string;
     QuestionType: T;
     enabled: boolean;
@@ -38,15 +45,15 @@ export interface SDCSection {
 }
 
 export interface SDCForm {
-    FormID: number;
-    DiagnosticProcedureID: number;
+    FormID: FormID;
+    DiagnosticProcedureID: DiagnosticProcedureID;
     FormName: string;
-    Version: number;
+    Version: string;
     FormSections: SDCSection[];
 }
 
 interface SDCAnswerBase<T extends SDCQuestion['QuestionType'], A> {
-    QuestionID: number;
+    QuestionID: QuestionID;
     AnswerType: T;
     Answer: A;
 }
@@ -66,14 +73,16 @@ export type SDCAnswerTypes = {
 export type SDCAnswer = SDCAnswerTypes[keyof SDCAnswerTypes];
 
 export interface SDCFormResponse {
-    FormResponseID: number;
-    FormID: number;
-    FormFillerID: number;
+    FormResponseID: FormResponseID;
+    FormID: FormID;
+    DiagnosticProcedureID: DiagnosticProcedureID;
+    PatientID: PatientID;
+    FormFillerID: FormFillerID;
     Answers: { [key: string]: SDCAnswer };
 }
 
 export interface SDCFormMetaData {
-    FormID: number;
-    DiagnosticProcedureID: number;
+    FormID: FormID;
+    DiagnosticProcedureID: DiagnosticProcedureID;
     FormName: string;
 }
