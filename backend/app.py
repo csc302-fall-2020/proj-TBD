@@ -190,13 +190,5 @@ def response_processing():
         FORM_RESPONSE_TABLE.insert_one(request.json)
         return jsonify(success=True), 201
 
-
-@APP.route('/test', methods=['GET', 'POST'])
-def test_route():
-    if request.method == 'GET':
-        return jsonify(success=True)
-    else:
-        return jsonify(success=True, body=request.get_json())
-
 if __name__ == '__main__':
     APP.run(debug=True)
