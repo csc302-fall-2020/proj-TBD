@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
@@ -39,14 +40,14 @@ def offset_and_limit(form_lst):
 
 
 def get_latest_form(form_lst):
-    max_version = max([float(x['Version']) for x in form_lst])
+    max_version = max([int(re.sub('\D', '', x['Version'])) for x in form_lst])
 
-    return [x for x in form_lst if float(x['Version']) == max_version][0]
+    return [x for x in form_lst if int(re.sub('\D', '', x['Version'])) == max_version][0]
 
 
 @APP.route('/forms/<FormID>', methods=['GET'])
 def get_form(FormID):
-    match_forms = FORM_TABLE.find({'FormID': int(FormID)})
+    match_forms = FORM_TABLE.find({'FormID': FormID})
 
     form_lst = list(match_forms)
 
@@ -64,9 +65,9 @@ def query_form(FormID, DiagnosticProcedureID):
     search_query = {}
 
     if FormID is not None:
-        search_query['FormID'] = int(FormID)
+        search_query['FormID'] = FormID
     if DiagnosticProcedureID is not None:
-        search_query['DiagnosticProcedureID'] = int(DiagnosticProcedureID)
+        search_query['DiagnosticProcedureID'] = DiagnosticProcedureID
 
     match_forms = FORM_TABLE.find(search_query, {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'})
 
@@ -129,7 +130,7 @@ def form_processing():
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET'])
 def get_response(FormResponseID):
-    match_form_responses = FORM_TABLE.find({'FormResponseID': int(FormResponseID)})
+    match_form_responses = FORM_TABLE.find({'FormResponseID': FormResponseID})
 
     form_lst = list(match_form_responses)
 
