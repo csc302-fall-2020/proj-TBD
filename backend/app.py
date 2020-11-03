@@ -1,16 +1,12 @@
 import datetime
 import os
+import re
 
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
-os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
-os.environ['MONGODB_USERNAME'] = 'admin'
-os.environ['MONGODB_PASSWORD'] = 'admin'
-os.environ['MONGODB_DB'] = 'SDC'
-
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -44,9 +40,9 @@ def offset_and_limit(form_lst):
 
 
 def get_latest_form(form_lst):
-    max_version = max([int(x['Version'].replace('.', '').replaceAll("[^\\d.]", "")) for x in form_lst])
+    max_version = max([int(re.sub('\D', '', x['Version'])) for x in form_lst])
 
-    return [x for x in form_lst if x['Version'] == max_version][0]
+    return [x for x in form_lst if int(re.sub('\D', '', x['Version'])) == max_version][0]
 
 
 @APP.route('/forms/<FormID>', methods=['GET'])
