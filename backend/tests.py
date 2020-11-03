@@ -20,19 +20,19 @@ class TestDBConnection(unittest.TestCase):
 
         self.assertTrue(True)
 
-    def test_collections_exit(self):
+    def test_collections_exist(self):
         CLUSTER = PyMongo(self.APP)
 
         DB = CLUSTER.db
-        FORM_TABLE = DB.forms
-        FORM_RESPONSE_TABLE = DB.form_responses
 
-        self.assertTrue(FORM_TABLE is not None and FORM_RESPONSE_TABLE is not None)
+        self.assertTrue(DB is not None)
 
 
 class TestDBQueries(unittest.TestCase):
     context = app.APP.app_context()
     context.push()
+
+    app.DB.createCollection('forms')
 
     app.FORM_TABLE.remove({'FormID': '-2'})
     app.FORM_TABLE.insert_one({'FormName': 'Test1', 'FormID': '-2', 'Version': '1.0'})
