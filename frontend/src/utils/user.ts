@@ -8,6 +8,6 @@ class User {
     setID = (id: string) => (this._ID = id);
 }
 
-let currentUser: User | undefined;
+let currentUser: User;
 export const getCurrentUser = () => currentUser;
 export const setCurrentUser = (id: string) => currentUser = new User(id);
