@@ -3,6 +3,8 @@ import { Menu, Typography } from 'antd';
 import { useParams, NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { getCurrentUser, setCurrentUser } from 'utils/user';
+
 const { Text } = Typography;
 
 const Header = styled.div`
@@ -43,19 +45,19 @@ type ParamTypes = { clinicianID: string };
 const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
     const selectedRoute = tabs[indexSelected].route;
     const { clinicianID } = useParams<ParamTypes>();
+    handleSetCurrentUser(clinicianID);
 
     return (
         <div data-testid="nav-bar">
             <Header>
                 <InnerWrapper>
                     <Text>Hello, Dr.</Text>
-                    <StyledMenu
-                        mode="horizontal"
-                        selectedKeys={[selectedRoute]}
-                    >
+                    <StyledMenu mode="horizontal" selectedKeys={[selectedRoute]}>
                         {tabs.map(({ tabName, route }) => (
                             <Menu.Item key={route}>
-                                <NavLink to={`/${clinicianID}${route}`} data-testid={tabName}>{tabName}</NavLink>
+                                <NavLink to={`/${clinicianID}${route}`} data-testid={tabName}>
+                                    {tabName}
+                                </NavLink>
                             </Menu.Item>
                         ))}
                     </StyledMenu>
@@ -66,6 +68,15 @@ const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
             </PageWrapper>
         </div>
     );
+};
+
+const handleSetCurrentUser = (clinicianID: string) => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        if (currentUser.getID() !== clinicianID) currentUser.setID(clinicianID);
+    } else {
+        setCurrentUser(clinicianID);
+    }
 };
 
 export default NavBar;

@@ -30,7 +30,7 @@ services:
     api:
         image: tomac7/name-tbd:backend
         tty: true
-        command: python app.py -debug
+        command: gunicorn --reload --bind 0.0.0.0:5000 app:APP
         ports:
             - 5000:5000
         environment:

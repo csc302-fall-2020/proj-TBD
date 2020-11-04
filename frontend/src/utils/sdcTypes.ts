@@ -85,4 +85,5 @@ export interface SDCFormMetaData {
     FormID: FormID;
     DiagnosticProcedureID: DiagnosticProcedureID;
     FormName: string;
+    Version: string;
 }
