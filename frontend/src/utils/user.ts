@@ -4,10 +4,10 @@ class User {
     constructor(id: string) {
         this._ID = id;
     }
-    getID = (): string | null => this._ID;
+    getID = (): string => this._ID;
     setID = (id: string) => (this._ID = id);
 }
 
-let currentUser: User;
+let currentUser: User | undefined;
 export const getCurrentUser = () => currentUser;
 export const setCurrentUser = (id: string) => currentUser = new User(id);

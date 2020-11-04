@@ -36,7 +36,7 @@ interface State {
     formMetaDataList: Array<SDCFormMetaData>;
 }
 
-class FormList extends React.Component {
+class FormList extends React.Component<{}, State> {
     async componentDidMount() {
         const formMetaDataList = await getFormMetaDataList({});
         console.log(formMetaDataList);
