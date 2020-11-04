@@ -98,23 +98,53 @@ paths:
           $ref: '#/components/responses/SDCForm'
         '404':
           $ref: '#/components/responses/404'
+    patch:
+      tags:
+        - Form
+      summary: Update existing form
+      parameters:
+        - in: path
+          name: FormID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormID'
+      requestBody:
+        $ref: '#/components/requestBodies/SDCFormBody'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+    delete:
+      tags:
+        - Form
+      summary: Delete existing form
+      parameters:
+        - in: path
+          name: FormID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormID'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '404':
+          $ref: '#/components/responses/404'
 
-  /forms:
+  /forms/search:
     get:
       tags:
         - Form
       summary: Get a list of empty forms' MetaData
-      
-      parameters: 
-        - name: FormID
+
+      parameters:
+        - name: FormName
           in: query
+          required: true
           schema:
-            $ref: '#/components/schemas/FormID'
-        - name: DiagnosticProcedureID
-          in: query
-          schema:
-            $ref: '#/components/schemas/DiagnosticProcedureID'
-        
+            $ref: '#/components/schemas/FormName'
 
       responses:
         '200':
@@ -122,6 +152,7 @@ paths:
         '404':
           $ref: '#/components/responses/404'
 
+  /forms:
     post:
       tags:
         - Form
@@ -157,12 +188,59 @@ paths:
           $ref: '#/components/responses/SDCFormResponse'
         '404':
           $ref: '#/components/responses/404'
+    patch:
+      tags:
+        - Form Responses
+      summary: Update a form response
+
+      parameters:
+        - in: path
+          name: FormResponseID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
+        - in: path
+          name: FormID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
+
+      requestBody:
+          $ref: '#/components/requestBodies/SDCFormResponseBody'
+
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '404':
+          $ref: '#/components/responses/404'
+    delete:
+      tags:
+        - Form Responses
+      summary: Delete a form response
+
+      parameters:
+        - in: path
+          name: FormResponseID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
+        - in: path
+          name: FormID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormResponseID'
+
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '404':
+          $ref: '#/components/responses/404'
   /forms/{FormID}/form-responses/search:
     get:
-      tags:		
-         - Form Responses		
+      tags:
+         - Form Responses
       summary: Search for form responses
-      parameters: 
+      parameters:
         - in: path
           name: FormID
           required: true
@@ -209,26 +287,29 @@ paths:
 components:
   schemas:
     DiagnosticProcedureID:
-      type: number
+      type: string
       description: "Identifier for medical observation or test result"
     PatientID:
-      type: number
+      type: string
       description: "Identifier for a patient"
     FormFillerID:
-      type: number
+      type: string
       description: "Identifier for a doctor or other clinician"
     FormID:
-      type: number
+      type: string
       description: "Identifier for an SDC form template"
     QuestionID:
-      type: number
+      type: string
       description: "Identifier for an SDC form question"
     FormResponseID:
-      type: number
+      type: string
       description: "Identifier for a specific form response"
     FormName:
       type: string
       description: "Form name"
+    Version:
+      type: string
+      description: "Version number for a form"
     SDCQuestion:
       type: object
       description: "A question in a form"
@@ -241,7 +322,7 @@ components:
         QuestionType:
           type: string
           description: "Type for an SDC form question"
-        enabled: 
+        enabled:
           type: boolean
           description: "Whether the question is enabled/disabled in the form"
         order:
@@ -334,15 +415,14 @@ components:
         FormName:
           $ref: '#/components/schemas/FormName'
         Version:
-          type: number
-          description: "Version number for the form"
+          $ref: '#/components/schemas/Version'
         FormSections:
           type: array
           items:
             $ref: '#/components/schemas/SDCSection'
     SDCFormResponse:
       type: object
-      description: "An object that contains the response to a SDCForm" 
+      description: "An object that contains the response to a SDCForm"
       properties:
         FormResponseID:
           $ref: '#/components/schemas/FormResponseID'
@@ -374,7 +454,9 @@ components:
             $ref: '#/components/schemas/DiagnosticProcedureID'
           FormName:
             $ref: '#/components/schemas/FormName'
-              
+          Version:
+            $ref: '#/components/schemas/Version'
+
 
 
   requestBodies:
@@ -396,6 +478,8 @@ components:
   responses:
     201:
       description: "Successfully created"
+    204:
+      description: "No Content"
     400:
       description: "Bad request"
     401:
