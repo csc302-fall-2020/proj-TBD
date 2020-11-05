@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Alert, Spin } from 'antd';
 import { SDCForm } from 'utils/sdcTypes';
 
-import FormRepository from '../repository';
+import formRepository from '../repository';
 import FormContainer from './FormContainer';
 
 const LoadingWrapper = styled(Spin)`
@@ -19,7 +19,6 @@ type Params = { clinicianID: string; formID: string };
 const Form: React.FC<FormProps> = () => {
     const { formID } = useParams<Params>();
 
-    const [repository] = useState(new FormRepository());
     const [form, setForm] = useState<SDCForm | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +28,7 @@ const Form: React.FC<FormProps> = () => {
             setForm(null);
 
             try {
-                const form = await repository.getForm(formId);
+                const form = await formRepository.getForm(formId);
 
                 setForm(form);
             } catch (e) {
@@ -38,7 +37,7 @@ const Form: React.FC<FormProps> = () => {
         };
 
         fetchForm(formID);
-    }, [formID, repository]);
+    }, [formID]);
 
     if (error) {
         return <Alert message={error} type={'error'} showIcon />;
