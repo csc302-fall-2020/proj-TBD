@@ -14,19 +14,19 @@ const LoadingWrapper = styled(Spin)`
 `;
 
 type FormProps = {};
-type Params = { clinicianId: string; formID: string };
+type Params = { clinicianID: string; formID: string };
 
 const Form: React.FC<FormProps> = () => {
     const { formID } = useParams<Params>();
 
     const [repository] = useState(new FormRepository());
-    const [form, setForm] = useState<SDCForm | undefined>(undefined);
-    const [error, setError] = useState<string | undefined>();
+    const [form, setForm] = useState<SDCForm | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchForm = async (formId: string) => {
-            setError(undefined);
-            setForm(undefined);
+            setError(null);
+            setForm(null);
 
             try {
                 const form = await repository.getForm(formId);
@@ -40,10 +40,11 @@ const Form: React.FC<FormProps> = () => {
         fetchForm(formID);
     }, [formID, repository]);
 
-    if (error !== undefined) {
+    if (error) {
         return <Alert message={error} type={'error'} showIcon />;
     }
-    if (form !== undefined) {
+
+    if (form) {
         return (
             <FormContainer
                 form={form}
