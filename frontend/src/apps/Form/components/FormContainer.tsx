@@ -115,7 +115,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                 rules={[{ required: true, message: 'Patient ID is required' }]}
                 wrapperCol={{ lg: 5 }}
             >
-                <Input />
+                <Input disabled={disabled} />
             </AntForm.Item>
             <Divider />
             <Row>
