@@ -394,6 +394,8 @@ components:
       type: object
       description: "An object that represents a section in an SDC xml file"
       properties:
+        SectionTitle:
+          type: string
         Questions:
           type: array
           items:
