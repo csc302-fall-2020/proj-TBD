@@ -61,6 +61,27 @@ class SampleFormRepository implements FormRepository {
                             },
                         ],
                     },
+                    {
+                        SectionTitle: 'Numbers',
+                        Questions: [
+                            {
+                                QuestionType: 'integer',
+                                enabled: true,
+                                order: 0,
+                                QuestionID: '4',
+                                QuestionString: 'What is 1+1',
+                                DependentQuestions: [],
+                            },
+                            {
+                                QuestionType: 'decimal',
+                                enabled: true,
+                                order: 0,
+                                QuestionID: '5',
+                                QuestionString: 'What is 1.5+1.5',
+                                DependentQuestions: [],
+                            }
+                        ]
+                    }
                 ],
                 Version: '1',
             };
