@@ -1,29 +1,19 @@
 import React from 'react';
-import { Space } from 'antd';
-import styled from 'styled-components';
 import { SDCSection } from 'utils/sdcTypes';
-import Question from './question/Question';
-
-const StyledSpaceFullWidth = styled(Space)`
-    width: 100%;
-`;
+import QuestionGroup from './QuestionGroup';
 
 export type FormSectionProps = {
     section: SDCSection;
+    disabled?: boolean;
 };
 
 const FormSection: React.FC<FormSectionProps> = (props) => {
     const {
         section: { Questions },
+        disabled,
     } = props;
 
-    return (
-        <StyledSpaceFullWidth direction={'vertical'}>
-            {Questions.map((q) => (
-                <Question key={q.QuestionID} question={q} />
-            ))}
-        </StyledSpaceFullWidth>
-    );
+    return <QuestionGroup questions={Questions} disabled={disabled} />;
 };
 
 export default FormSection;

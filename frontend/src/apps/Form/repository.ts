@@ -1,7 +1,9 @@
-import { SDCForm } from 'utils/sdcTypes';
+import { SDCForm, SDCFormResponse } from 'utils/sdcTypes';
 
 export interface FormRepository {
     getForm(formId: string): Promise<SDCForm>;
+
+    submitResponse(response: SDCFormResponse): Promise<void>;
 }
 
 class SampleFormRepository implements FormRepository {
@@ -37,10 +39,19 @@ class SampleFormRepository implements FormRepository {
                                 QuestionType: 'multipleChoice',
                                 enabled: true,
                                 order: 0,
-                                QuestionID: '1',
+                                QuestionID: '2',
                                 QuestionString: 'What is your favourite color?',
                                 DependentQuestions: [],
                                 options: ['Red', 'Blue', 'Green'],
+                            },
+                            {
+                                QuestionType: 'radio',
+                                enabled: true,
+                                order: 0,
+                                QuestionID: '3',
+                                QuestionString: 'Are your answers honest?',
+                                DependentQuestions: [],
+                                options: ['Yes', 'No', 'Perhaps', 'Absolutely not'],
                             },
                         ],
                     },
@@ -51,6 +62,10 @@ class SampleFormRepository implements FormRepository {
             console.log('error');
             throw new Error('Form not found');
         }
+    }
+
+    submitResponse(response: SDCFormResponse): Promise<void> {
+        return Promise.resolve();
     }
 }
 

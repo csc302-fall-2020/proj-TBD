@@ -1,10 +1,12 @@
 import React from 'react';
-import { Space, Typography } from 'antd';
+import { Form } from 'antd';
+import styled from 'styled-components';
 import {
     SDC_QUESTION_TYPE_MULTIPLE_CHOICE,
     SDC_QUESTION_TYPE_RADIO,
     SDC_QUESTION_TYPE_STRING,
     SDC_QUESTION_TYPE_TRUE_FALSE,
+    SDCAnswerTypes,
     SDCQuestion,
     SDCQuestionTypes,
 } from 'utils/sdcTypes';
@@ -12,9 +14,7 @@ import MultipleChoiceQuestion from './MultipleChoiceQuestion';
 import RadioQuestion from './RadioQuestion';
 import TrueFalseQuestion from './TrueFalseQuestion';
 import StringQuestion from './StringQuestion';
-import styled from 'styled-components';
-
-const { Text } = Typography;
+import QuestionGroup from '../QuestionGroup';
 
 const DependentQuestionsWrapper = styled.div`
     margin-left: 2em;
@@ -22,6 +22,9 @@ const DependentQuestionsWrapper = styled.div`
 
 export type QuestionControlProps<T extends SDCQuestion> = {
     question: T;
+    value?: SDCAnswerTypes[T['QuestionType']]['Answer'];
+    onChange?: (value: SDCAnswerTypes[T['QuestionType']]['Answer']) => void;
+    disabled?: boolean;
 };
 
 type QuestionTypes = SDCQuestion['QuestionType'];
@@ -37,25 +40,25 @@ const components: {
 
 export type QuestionProps = {
     question: SDCQuestion;
+    disabled?: boolean;
 };
 
 const Question: React.FC<QuestionProps> = (props) => {
-    const { question } = props;
+    const { question, disabled } = props;
 
     const Component: React.ComponentType<QuestionControlProps<any>> = components[question.QuestionType];
 
     return (
-        <Space size={'small'} direction={'vertical'}>
-            <Text>{question.QuestionString}</Text>
-            {<Component question={question} />}
+        <>
+            <Form.Item name={question.QuestionID} label={question.QuestionString}>
+                {<Component question={question} disabled={disabled} />}
+            </Form.Item>
             {question.DependentQuestions.length > 0 && (
                 <DependentQuestionsWrapper>
-                    {question.DependentQuestions.map((q) => (
-                        <Question key={q.QuestionID} question={q} />
-                    ))}
+                    <QuestionGroup questions={question.DependentQuestions} disabled={disabled} />
                 </DependentQuestionsWrapper>
             )}
-        </Space>
+        </>
     );
 };
 
