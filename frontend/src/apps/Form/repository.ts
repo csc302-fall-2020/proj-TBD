@@ -17,6 +17,7 @@ class SampleFormRepository implements FormRepository {
                 FormName: 'My Medical Form',
                 FormSections: [
                     {
+                        SectionTitle: 'The Sky',
                         Questions: [
                             {
                                 QuestionType: 'string',
@@ -35,6 +36,11 @@ class SampleFormRepository implements FormRepository {
                                     },
                                 ],
                             },
+                        ],
+                    },
+                    {
+                        SectionTitle: 'Colours',
+                        Questions: [
                             {
                                 QuestionType: 'multipleChoice',
                                 enabled: true,

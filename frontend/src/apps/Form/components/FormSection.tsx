@@ -9,11 +9,16 @@ export type FormSectionProps = {
 
 const FormSection: React.FC<FormSectionProps> = (props) => {
     const {
-        section: { Questions },
+        section: { Questions, SectionTitle },
         disabled,
     } = props;
 
-    return <QuestionGroup questions={Questions} disabled={disabled} />;
+    return (
+        <>
+            <h2>{SectionTitle}</h2>
+            <QuestionGroup questions={Questions} disabled={disabled} />
+        </>
+    );
 };
 
 export default FormSection;
