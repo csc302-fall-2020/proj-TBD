@@ -1,4 +1,5 @@
 import { SDCForm, SDCFormResponse } from 'utils/sdcTypes';
+import axios from 'axios';
 
 export interface FormRepository {
     getForm(formId: string): Promise<SDCForm>;
@@ -96,4 +97,16 @@ class SampleFormRepository implements FormRepository {
     }
 }
 
-export default SampleFormRepository;
+const formRepository: FormRepository = {
+    submitResponse(response: SDCFormResponse): Promise<void> {
+        // TODO: Yucen
+        throw new Error("Not Implemented");
+    },
+
+    async getForm(formId: string): Promise<SDCForm> {
+        const response = await axios.get(`/forms/${formId}`);
+        return response.data as SDCForm;
+    },
+};
+
+export default formRepository;
