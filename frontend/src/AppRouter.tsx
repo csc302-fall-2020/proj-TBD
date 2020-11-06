@@ -6,7 +6,7 @@ import Home from 'apps/Home';
 import FormList from 'apps/FormList';
 import Form from 'apps/Form';
 import Login from 'apps/Login';
-import Search from 'apps/Search';
+import FormResponseList from 'apps/FormResponseList';
 import { FormFillerFormResponse, FormReceiverFormResponse } from './apps/FormResponse';
 
 import NavBar from 'common/NavBar';
@@ -14,7 +14,7 @@ import NavBar from 'common/NavBar';
 const tabs = [
     { tabName: 'Home', route: '/home' },
     { tabName: 'Forms', route: '/forms' },
-    { tabName: 'Search', route: '/search' },
+    { tabName: 'Responses', route: '/responses' },
 ];
 
 function AppRouter() {
@@ -53,10 +53,10 @@ function AppRouter() {
             />
             <Route
                 exact
-                path="/:clinicianID/search"
+                path="/:clinicianID/responses"
                 children={
                     <NavBar indexSelected={2} tabs={tabs}>
-                        <Search />
+                        <FormResponseList />
                     </NavBar>
                 }
             />
@@ -64,7 +64,7 @@ function AppRouter() {
                 exact
                 path="/:clinicianID/responses/:responseID"
                 children={
-                    <NavBar indexSelected={1} tabs={tabs}>
+                    <NavBar indexSelected={2} tabs={tabs}>
                         <FormFillerFormResponse />
                     </NavBar>
                 }
