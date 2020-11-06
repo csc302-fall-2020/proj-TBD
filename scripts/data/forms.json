@@ -80,7 +80,7 @@
                                 "enabledState": ["Blue"],
                                 "order": 0,
                                 "QuestionID": "2_2",
-                                "QuestionString": "Why is it red?",
+                                "QuestionString": "Why is it blue?",
                                 "DependentQuestions": []
                             },
                             {
@@ -88,7 +88,7 @@
                                 "enabledState": ["Green"],
                                 "order": 0,
                                 "QuestionID": "2_3",
-                                "QuestionString": "Why is it red?",
+                                "QuestionString": "Why is it green?",
                                 "DependentQuestions": []
                             }
                         ]

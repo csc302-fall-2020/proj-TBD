@@ -6,7 +6,7 @@
 
 ## Sample Data
 
-Use `npm run mock-data` to load sample data into the database.
+Use `npm run load-sample-data` to load sample data into the database.
 
 Loads data into collections:
 
