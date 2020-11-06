@@ -8,6 +8,7 @@ import {
     SDC_QUESTION_TYPE_RADIO,
     SDC_QUESTION_TYPE_STRING,
     SDC_QUESTION_TYPE_TRUE_FALSE,
+    SDCAnswer,
     SDCAnswerTypes,
     SDCQuestion,
     SDCQuestionTypes
@@ -59,11 +60,11 @@ export type QuestionProps = {
 
 const Question: React.FC<QuestionProps> = props => {
     const { question, disabled } = props;
-    const [answer, setAnswer] = useState('');
+    const [answer, setAnswer] = useState<SDCAnswer['Answer'] | null>('');
 
-    const control = controls[question.QuestionType];
+    const control = controls[question.QuestionType] as QuestionControl<typeof question['QuestionType']>;
 
-    let Component: QuestionControlComponent<any>;
+    let Component: QuestionControlComponent<typeof question['QuestionType']>;
     let rules: Rule[] | undefined;
     if (typeof control === 'object') {
         Component = control.Component;

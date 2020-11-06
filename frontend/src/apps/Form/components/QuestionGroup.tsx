@@ -27,8 +27,8 @@ const QuestionGroup: React.FC<QuestionGroupProps> = props => {
                     // antd checkbox component doesn't return values in order. This ensures equality if array.
                     !isNull(parentAnswer) &&
                     !isNull(q.enabledState) &&
-                    typeof parentAnswer === 'object' &&
-                    typeof q.enabledState === 'object'
+                    Array.isArray(parentAnswer) &&
+                    Array.isArray(q.enabledState)
                 ) {
                     parentAnswer.sort();
                     q.enabledState.sort();
