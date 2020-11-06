@@ -165,7 +165,7 @@ paths:
           $ref: '#/components/responses/201'
 
   # =============== FORM RESPONSES
-  /forms/{FormID}/form-responses/{FormResponseID}:
+  /form-responses/{FormResponseID}:
     get:
       tags:
         - Form Responses
@@ -174,11 +174,6 @@ paths:
       parameters:
         - in: path
           name: FormResponseID
-          required: true
-          schema:
-            $ref: '#/components/schemas/FormResponseID'
-        - in: path
-          name: FormID
           required: true
           schema:
             $ref: '#/components/schemas/FormResponseID'
@@ -199,11 +194,6 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/FormResponseID'
-        - in: path
-          name: FormID
-          required: true
-          schema:
-            $ref: '#/components/schemas/FormResponseID'
 
       requestBody:
           $ref: '#/components/requestBodies/SDCFormResponseBody'
@@ -221,11 +211,6 @@ paths:
       parameters:
         - in: path
           name: FormResponseID
-          required: true
-          schema:
-            $ref: '#/components/schemas/FormResponseID'
-        - in: path
-          name: FormID
           required: true
           schema:
             $ref: '#/components/schemas/FormResponseID'
@@ -265,14 +250,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponseList'
-  /forms/{FormID}/form-responses:
+  /form-responses:
     post:
-      parameters:
-      - in: path
-        name: FormID
-        required: true
-        schema:
-          $ref: '#/components/schemas/FormResponseID'
       tags:
         - Form Responses
       summary: Create a form response

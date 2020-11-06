@@ -130,7 +130,7 @@ def form_processing():
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET'])
 def get_response(FormResponseID):
-    match_form_responses = FORM_TABLE.find({'FormResponseID': FormResponseID})
+    match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
 
     form_lst = list(match_form_responses)
 
