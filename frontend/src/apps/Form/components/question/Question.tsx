@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Form } from 'antd';
 import styled from 'styled-components';
 import {
@@ -8,9 +8,10 @@ import {
     SDC_QUESTION_TYPE_RADIO,
     SDC_QUESTION_TYPE_STRING,
     SDC_QUESTION_TYPE_TRUE_FALSE,
+    SDCAnswer,
     SDCAnswerTypes,
     SDCQuestion,
-    SDCQuestionTypes,
+    SDCQuestionTypes
 } from 'utils/sdcTypes';
 import { Rule } from 'antd/lib/form';
 import QuestionGroup from '../QuestionGroup';
@@ -39,15 +40,13 @@ export type QuestionControl<T extends QuestionTypes> =
 
 type QuestionTypes = SDCQuestion['QuestionType'];
 
-const controls: {
-    [k in QuestionTypes]: QuestionControl<k>;
-} = {
+const controls: { [k in QuestionTypes]: QuestionControl<k> } = {
     [SDC_QUESTION_TYPE_MULTIPLE_CHOICE]: MultipleChoiceQuestion,
     [SDC_QUESTION_TYPE_RADIO]: RadioQuestion,
     [SDC_QUESTION_TYPE_TRUE_FALSE]: TrueFalseQuestion,
     [SDC_QUESTION_TYPE_STRING]: StringQuestion,
     [SDC_QUESTION_TYPE_INTEGER]: IntegerQuestion,
-    [SDC_QUESTION_TYPE_DECIMAL]: DecimalQuestion,
+    [SDC_QUESTION_TYPE_DECIMAL]: DecimalQuestion
 };
 
 const DependentQuestionsWrapper = styled.div`
@@ -59,12 +58,13 @@ export type QuestionProps = {
     disabled?: boolean;
 };
 
-const Question: React.FC<QuestionProps> = (props) => {
+const Question: React.FC<QuestionProps> = props => {
     const { question, disabled } = props;
+    const [answer, setAnswer] = useState<SDCAnswer['Answer'] | null>('');
 
-    const control = controls[question.QuestionType];
+    const control = controls[question.QuestionType] as QuestionControl<typeof question['QuestionType']>;
 
-    let Component: QuestionControlComponent<any>;
+    let Component: QuestionControlComponent<typeof question['QuestionType']>;
     let rules: Rule[] | undefined;
     if (typeof control === 'object') {
         Component = control.Component;
@@ -76,11 +76,15 @@ const Question: React.FC<QuestionProps> = (props) => {
     return (
         <>
             <Form.Item name={question.QuestionID} label={question.QuestionString} rules={rules}>
-                {<Component question={question} disabled={disabled} />}
+                {<Component question={question} disabled={disabled} onChange={a => setAnswer(a)} />}
             </Form.Item>
             {question.DependentQuestions.length > 0 && (
                 <DependentQuestionsWrapper>
-                    <QuestionGroup questions={question.DependentQuestions} disabled={disabled} />
+                    <QuestionGroup
+                        questions={question.DependentQuestions}
+                        parentAnswer={answer}
+                        disabled={disabled || answer === ''}
+                    />
                 </DependentQuestionsWrapper>
             )}
         </>

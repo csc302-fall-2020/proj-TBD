@@ -1,4 +1,4 @@
-import { Space, Checkbox, Row, Col } from 'antd';
+import { Checkbox, Row, Col } from 'antd';
 import React from 'react';
 import { SDCMultipleChoiceQuestion } from 'utils/sdcTypes';
 import { QuestionControlProps } from './Question';

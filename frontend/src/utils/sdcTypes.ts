@@ -16,7 +16,7 @@ interface SDCQuestionBase<T extends string> {
     QuestionID: QuestionID;
     QuestionString: string;
     QuestionType: T;
-    enabled: boolean;
+    enabledState: SDCAnswer['Answer'] | null;
     order: number;
     DependentQuestions: SDCQuestion[];
 }
