@@ -89,7 +89,7 @@ export interface SDCFormResponse {
     DiagnosticProcedureID: DiagnosticProcedureID;
     PatientID: PatientID;
     FormFillerID: FormFillerID;
-    Answers: { [key: string]: SDCAnswer };
+    Answers: { [key: string]: SDCAnswer | null | undefined };
 }
 
 export interface SDCFormMetaData {

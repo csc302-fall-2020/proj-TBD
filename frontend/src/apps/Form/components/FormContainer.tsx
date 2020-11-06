@@ -11,7 +11,7 @@ const { Title, Text } = Typography;
  * Gets all questions including and inside a question
  */
 const _getQuestions = (question: SDCQuestion): SDCQuestion[] => {
-    return question.DependentQuestions.reduce((prev, curr) => [..._getQuestions(curr)], [question]);
+    return question.DependentQuestions.reduce((prev, curr) => [...prev, ..._getQuestions(curr)], [question]);
 };
 
 /**
@@ -55,11 +55,13 @@ const _constructFormResponse = (form: SDCForm, formValues: any, previousResponse
     return response;
 };
 
-const _constructFormFieldData = (response: SDCFormResponse) => {
+const _constructFormFieldData = (form: SDCForm, response: SDCFormResponse) => {
+    const questions = _getFormQuestions(form);
+
     return [
-        ...Object.keys(response.Answers).map((questionId) => ({
-            name: questionId,
-            value: response.Answers[questionId].Answer,
+        ...questions.map((question) => ({
+            name: question.QuestionID,
+            value: response.Answers[question.QuestionID]?.Answer,
         })),
         { name: PATIENT_ID_INPUT_NAME, value: response.PatientID },
     ];
@@ -90,9 +92,9 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
     useEffect(() => {
         if (sdcResponse !== undefined) {
             // Populate the form with existing response data
-            form.setFields(_constructFormFieldData(sdcResponse));
+            form.setFields(_constructFormFieldData(sdcForm, sdcResponse));
         }
-    }, [sdcResponse]);
+    }, [form, sdcForm, sdcResponse]);
 
     return (
         <StyledForm
@@ -125,11 +127,13 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                     ))}
                 </Col>
             </Row>
-            <AntForm.Item>
-                <Button type={'primary'} htmlType={'submit'}>
-                    Submit
-                </Button>
-            </AntForm.Item>
+            {!disabled && (
+                <AntForm.Item>
+                    <Button type={'primary'} htmlType={'submit'}>
+                        Submit
+                    </Button>
+                </AntForm.Item>
+            )}
         </StyledForm>
     );
 };
