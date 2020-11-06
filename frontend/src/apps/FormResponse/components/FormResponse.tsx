@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { SDCForm, SDCFormResponse } from '../../../utils/sdcTypes';
+import { SDCForm, SDCFormResponse } from 'utils/sdcTypes';
 import formResponseRepository from '../repository';
-import formRepository from '../../Form/repository';
+import formRepository from 'apps/Form/repository';
 import FormContainer from 'apps/Form/components/FormContainer';
 import { Alert, Spin } from 'antd';
 import styled from 'styled-components';
