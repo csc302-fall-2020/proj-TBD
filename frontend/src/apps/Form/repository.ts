@@ -9,7 +9,7 @@ export interface FormRepository {
 
 class SampleFormRepository implements FormRepository {
     async getForm(formId: string): Promise<SDCForm> {
-        await new Promise((res) => setTimeout(() => res(), 500));
+        await new Promise(res => setTimeout(() => res(), 500));
 
         if (formId === '1') {
             return {
@@ -22,69 +22,97 @@ class SampleFormRepository implements FormRepository {
                         Questions: [
                             {
                                 QuestionType: 'string',
-                                enabled: true,
+                                enabledState: null,
                                 order: 0,
                                 QuestionID: '1',
                                 QuestionString: 'What colour is the sky?',
                                 DependentQuestions: [
                                     {
                                         QuestionType: 'trueFalse',
-                                        enabled: true,
+                                        enabledState: null,
                                         order: 1,
                                         QuestionID: '1234',
                                         QuestionString: 'Is it overcast?',
-                                        DependentQuestions: [],
-                                    },
-                                ],
-                            },
-                        ],
+                                        DependentQuestions: [
+                                            {
+                                                QuestionType: 'string',
+                                                enabledState: true,
+                                                order: 0,
+                                                QuestionID: '8',
+                                                QuestionString: 'Is it going to rain?',
+                                                DependentQuestions: []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
                     },
                     {
                         SectionTitle: 'Colours',
                         Questions: [
                             {
                                 QuestionType: 'multipleChoice',
-                                enabled: true,
+                                enabledState: null,
                                 order: 0,
                                 QuestionID: '2',
                                 QuestionString: 'What is your favourite color?',
-                                DependentQuestions: [],
-                                options: ['Red', 'Blue', 'Green'],
+                                DependentQuestions: [
+                                    {
+                                        QuestionType: 'radio',
+                                        enabledState: ['Red', 'Blue', 'Green'],
+                                        order: 0,
+                                        QuestionID: '6',
+                                        QuestionString: 'Are you sure?',
+                                        DependentQuestions: [],
+                                        options: ['Yes', 'No']
+                                    }
+                                ],
+                                options: ['Red', 'Blue', 'Green']
                             },
                             {
                                 QuestionType: 'radio',
-                                enabled: true,
+                                enabledState: null,
                                 order: 0,
                                 QuestionID: '3',
                                 QuestionString: 'Are your answers honest?',
-                                DependentQuestions: [],
-                                options: ['Yes', 'No', 'Perhaps', 'Absolutely not'],
-                            },
-                        ],
+                                DependentQuestions: [
+                                    {
+                                        QuestionType: 'string',
+                                        enabledState: 'Yes',
+                                        order: 0,
+                                        QuestionID: '7',
+                                        QuestionString: 'Why?',
+                                        DependentQuestions: []
+                                    }
+                                ],
+                                options: ['Yes', 'No', 'Perhaps', 'Absolutely not']
+                            }
+                        ]
                     },
                     {
                         SectionTitle: 'Numbers',
                         Questions: [
                             {
                                 QuestionType: 'integer',
-                                enabled: true,
+                                enabledState: null,
                                 order: 0,
                                 QuestionID: '4',
                                 QuestionString: 'What is 1+1',
-                                DependentQuestions: [],
+                                DependentQuestions: []
                             },
                             {
                                 QuestionType: 'decimal',
-                                enabled: true,
+                                enabledState: null,
                                 order: 0,
                                 QuestionID: '5',
                                 QuestionString: 'What is 1.5+1.5',
-                                DependentQuestions: [],
+                                DependentQuestions: []
                             }
                         ]
                     }
                 ],
-                Version: '1',
+                Version: '1'
             };
         } else {
             console.log('error');
@@ -100,7 +128,7 @@ class SampleFormRepository implements FormRepository {
 const formRepository: FormRepository = {
     submitResponse(response: SDCFormResponse): Promise<void> {
         // TODO: Yucen
-        throw new Error("Not Implemented");
+        throw new Error('Not Implemented');
     },
 
     async getForm(formId: string): Promise<SDCForm> {

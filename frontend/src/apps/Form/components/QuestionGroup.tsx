@@ -1,10 +1,14 @@
 import React from 'react';
-import { SDCQuestion } from 'utils/sdcTypes';
-import Question from './question/Question';
 import styled from 'styled-components';
+import { isNull, isUndefined, isEqual } from 'lodash';
+
+import Question from './question/Question';
+
+import { SDCQuestion, SDCAnswer } from 'utils/sdcTypes';
 
 export type QuestionGroupProps = {
     questions: SDCQuestion[];
+    parentAnswer?: SDCAnswer['Answer'] | null;
     disabled?: boolean;
 };
 
@@ -14,14 +18,27 @@ const QuestionsWrapper = styled.div`
     justify-content: stretch;
 `;
 
-const QuestionGroup: React.FC<QuestionGroupProps> = (props) => {
-    const { questions, disabled } = props;
-
+const QuestionGroup: React.FC<QuestionGroupProps> = props => {
+    const { questions, parentAnswer, disabled } = props;
     return (
         <QuestionsWrapper>
-            {questions.map((q) => (
-                <Question key={q.QuestionID} question={q} disabled={disabled} />
-            ))}
+            {questions.map(q => {
+                if (
+                    // antd checkbox component doesn't return values in order. This ensures equality if array.
+                    !isNull(parentAnswer) &&
+                    !isNull(q.enabledState) &&
+                    typeof parentAnswer === 'object' &&
+                    typeof q.enabledState === 'object'
+                ) {
+                    parentAnswer.sort();
+                    q.enabledState.sort();
+                }
+                return (
+                    (isUndefined(parentAnswer) || isNull(q.enabledState) || isEqual(parentAnswer, q.enabledState)) && (
+                        <Question key={q.QuestionID} question={q} disabled={disabled} />
+                    )
+                );
+            })}
         </QuestionsWrapper>
     );
 };
