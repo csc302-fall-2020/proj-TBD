@@ -12,7 +12,7 @@
                         "QuestionType": "string",
                         "QuestionString": "Hello",
                         "QuestionID": "1",
-                        "enabled": true,
+                        "enabledState": null,
                         "order": 0,
                         "DependentQuestions": []
                     }
@@ -30,18 +30,27 @@
                 "Questions": [
                     {
                         "QuestionType": "string",
-                        "enabled": true,
+                        "enabledState": null,
                         "order": 0,
                         "QuestionID": "1",
                         "QuestionString": "What colour is the sky?",
                         "DependentQuestions": [
                             {
                                 "QuestionType": "trueFalse",
-                                "enabled": true,
+                                "enabledState": null,
                                 "order": 1,
                                 "QuestionID": "1234",
                                 "QuestionString": "Is it overcast?",
-                                "DependentQuestions": []
+                                "DependentQuestions": [
+                                    {
+                                        "QuestionID": "1234_1",
+                                        "QuestionType": "radio",
+                                        "order": 2,
+                                        "QuestionString": "What kind?",
+                                        "options": ["cloudy", "raining", "snowing", "hailing"],
+                                        "DependentQuestions": []
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -52,30 +61,46 @@
                 "Questions": [
                     {
                         "QuestionType": "multipleChoice",
-                        "enabled": true,
+                        "enabledState": null,
                         "order": 0,
                         "QuestionID": "2",
                         "QuestionString": "What is your favourite color?",
-                        "DependentQuestions": [],
-                        "options": [
-                            "Red",
-                            "Blue",
-                            "Green"
+                        "options": ["Red", "Blue", "Green"],
+                        "DependentQuestions": [
+                            {
+                                "QuestionType": "string",
+                                "enabledState": ["Red"],
+                                "order": 0,
+                                "QuestionID": "2_1",
+                                "QuestionString": "Why is it red?",
+                                "DependentQuestions": []
+                            },
+                            {
+                                "QuestionType": "string",
+                                "enabledState": ["Blue"],
+                                "order": 0,
+                                "QuestionID": "2_2",
+                                "QuestionString": "Why is it red?",
+                                "DependentQuestions": []
+                            },
+                            {
+                                "QuestionType": "string",
+                                "enabledState": ["Green"],
+                                "order": 0,
+                                "QuestionID": "2_3",
+                                "QuestionString": "Why is it red?",
+                                "DependentQuestions": []
+                            }
                         ]
                     },
                     {
                         "QuestionType": "radio",
-                        "enabled": true,
+                        "enabledState": null,
                         "order": 0,
                         "QuestionID": "3",
                         "QuestionString": "Are your answers honest?",
                         "DependentQuestions": [],
-                        "options": [
-                            "Yes",
-                            "No",
-                            "Perhaps",
-                            "Absolutely not"
-                        ]
+                        "options": ["Yes", "No", "Perhaps", "Absolutely not"]
                     }
                 ]
             },
@@ -84,7 +109,7 @@
                 "Questions": [
                     {
                         "QuestionType": "integer",
-                        "enabled": true,
+                        "enabledState": null,
                         "order": 0,
                         "QuestionID": "4",
                         "QuestionString": "What is 1+1",
@@ -92,7 +117,7 @@
                     },
                     {
                         "QuestionType": "decimal",
-                        "enabled": true,
+                        "enabledState": null,
                         "order": 0,
                         "QuestionID": "5",
                         "QuestionString": "What is 1.5+1.5",
