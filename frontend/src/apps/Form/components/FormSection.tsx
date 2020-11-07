@@ -4,7 +4,7 @@ import QuestionGroup from './QuestionGroup';
 
 export type FormSectionProps = {
     section: SDCSection;
-    initialValues?: Record<string, SDCAnswer['Answer'] | undefined>;
+    initialValues?: Record<string, SDCAnswer['Answer']>;
     disabled?: boolean;
 };
 

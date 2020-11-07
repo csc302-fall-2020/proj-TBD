@@ -1,5 +1,5 @@
 import { Checkbox, Row, Col } from 'antd';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SDCMultipleChoiceQuestion } from 'utils/sdcTypes';
 import { QuestionControlProps } from './Question';
 import styled from 'styled-components';

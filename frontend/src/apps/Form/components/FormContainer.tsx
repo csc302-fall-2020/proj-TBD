@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button, Col, Divider, Form as AntForm, Form, Input, Row, Space, Typography } from 'antd';
 import { SDCAnswer, SDCForm, SDCFormResponse, SDCQuestion } from 'utils/sdcTypes';
 import FormSection from './FormSection';
@@ -67,13 +67,10 @@ const _constructFormFieldData = (form: SDCForm, response: SDCFormResponse) => {
     ];
 };
 
-const _constructInitialFormData = (
-    form: SDCForm,
-    response: SDCFormResponse
-): Record<string, SDCAnswer['Answer'] | undefined> => {
+const _constructInitialFormData = (form: SDCForm, response: SDCFormResponse): Record<string, SDCAnswer['Answer']> => {
     const fieldData = _constructFormFieldData(form, response);
 
-    const data: Record<string, SDCAnswer['Answer'] | undefined> = {};
+    const data: Record<string, SDCAnswer['Answer']> = {};
     fieldData.forEach((d) => (data[d.name] = d.value));
 
     return data;

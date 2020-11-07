@@ -8,7 +8,7 @@ import { SDCQuestion, SDCAnswer } from 'utils/sdcTypes';
 
 export type QuestionGroupProps = {
     questions: SDCQuestion[];
-    initialValues?: Record<string, SDCAnswer['Answer'] | undefined>;
+    initialValues?: Record<string, SDCAnswer['Answer']>;
     parentAnswer?: SDCAnswer['Answer'] | null;
     disabled?: boolean;
 };

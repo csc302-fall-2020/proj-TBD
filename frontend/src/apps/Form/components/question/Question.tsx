@@ -55,7 +55,7 @@ const DependentQuestionsWrapper = styled.div`
 
 export type QuestionProps = {
     question: SDCQuestion;
-    initialValues?: Record<string, SDCAnswer['Answer'] | undefined>;
+    initialValues?: Record<string, SDCAnswer['Answer']>;
     disabled?: boolean;
 };
 
