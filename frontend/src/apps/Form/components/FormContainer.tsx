@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Col, Divider, Form as AntForm, Form, Input, Row, Space, Typography } from 'antd';
 import { SDCAnswer, SDCForm, SDCFormResponse, SDCQuestion } from 'utils/sdcTypes';
 import FormSection from './FormSection';
@@ -67,6 +67,18 @@ const _constructFormFieldData = (form: SDCForm, response: SDCFormResponse) => {
     ];
 };
 
+const _constructInitialFormData = (
+    form: SDCForm,
+    response: SDCFormResponse
+): Record<string, SDCAnswer['Answer'] | undefined> => {
+    const fieldData = _constructFormFieldData(form, response);
+
+    const data: Record<string, SDCAnswer['Answer'] | undefined> = {};
+    fieldData.forEach((d) => (data[d.name] = d.value));
+
+    return data;
+};
+
 const StyledForm = styled(AntForm)`
     .ant-form-item {
         margin-bottom: 18px;
@@ -88,16 +100,11 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
     const { form: sdcForm, response: sdcResponse, onSubmit, disabled } = props;
 
     const [form] = Form.useForm();
-
-    useEffect(() => {
-        if (sdcResponse !== undefined) {
-            // Populate the form with existing response data
-            form.setFields(_constructFormFieldData(sdcForm, sdcResponse));
-        }
-    }, [form, sdcForm, sdcResponse]);
+    const [initialData] = useState(sdcResponse ? _constructInitialFormData(sdcForm, sdcResponse) : null);
 
     return (
         <StyledForm
+            initialValues={initialData ?? undefined}
             form={form}
             scrollToFirstError
             layout={'vertical'}
@@ -123,7 +130,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
             <Row>
                 <Col flex={'auto'}>
                     {sdcForm.FormSections.map((s, i) => (
-                        <FormSection key={i} section={s} disabled={disabled} />
+                        <FormSection key={i} initialValues={initialData ?? undefined} section={s} disabled={disabled} />
                     ))}
                 </Col>
             </Row>

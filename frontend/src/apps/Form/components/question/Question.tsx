@@ -11,7 +11,7 @@ import {
     SDCAnswer,
     SDCAnswerTypes,
     SDCQuestion,
-    SDCQuestionTypes
+    SDCQuestionTypes,
 } from 'utils/sdcTypes';
 import { Rule } from 'antd/lib/form';
 import QuestionGroup from '../QuestionGroup';
@@ -46,7 +46,7 @@ const controls: { [k in QuestionTypes]: QuestionControl<k> } = {
     [SDC_QUESTION_TYPE_TRUE_FALSE]: TrueFalseQuestion,
     [SDC_QUESTION_TYPE_STRING]: StringQuestion,
     [SDC_QUESTION_TYPE_INTEGER]: IntegerQuestion,
-    [SDC_QUESTION_TYPE_DECIMAL]: DecimalQuestion
+    [SDC_QUESTION_TYPE_DECIMAL]: DecimalQuestion,
 };
 
 const DependentQuestionsWrapper = styled.div`
@@ -55,12 +55,13 @@ const DependentQuestionsWrapper = styled.div`
 
 export type QuestionProps = {
     question: SDCQuestion;
+    initialValues?: Record<string, SDCAnswer['Answer'] | undefined>;
     disabled?: boolean;
 };
 
-const Question: React.FC<QuestionProps> = props => {
-    const { question, disabled } = props;
-    const [answer, setAnswer] = useState<SDCAnswer['Answer'] | null>('');
+const Question: React.FC<QuestionProps> = (props) => {
+    const { question, disabled, initialValues } = props;
+    const [answer, setAnswer] = useState<SDCAnswer['Answer'] | null>(initialValues?.[question.QuestionID] ?? '');
 
     const control = controls[question.QuestionType] as QuestionControl<typeof question['QuestionType']>;
 
@@ -76,12 +77,13 @@ const Question: React.FC<QuestionProps> = props => {
     return (
         <>
             <Form.Item name={question.QuestionID} label={question.QuestionString} rules={rules}>
-                {<Component question={question} disabled={disabled} onChange={a => setAnswer(a)} />}
+                {<Component question={question} disabled={disabled} onChange={(a) => setAnswer(a)} />}
             </Form.Item>
             {question.DependentQuestions.length > 0 && (
                 <DependentQuestionsWrapper>
                     <QuestionGroup
                         questions={question.DependentQuestions}
+                        initialValues={initialValues}
                         parentAnswer={answer}
                         disabled={disabled || answer === ''}
                     />
