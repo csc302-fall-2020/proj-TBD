@@ -62,7 +62,7 @@ export interface SDCForm {
 interface SDCAnswerBase<T extends SDCQuestion['QuestionType'], A> {
     QuestionID: QuestionID;
     AnswerType: T;
-    Answer: A;
+    Answer: A | undefined;
 }
 
 export type SDCStringAnswer = SDCAnswerBase<typeof SDC_QUESTION_TYPE_STRING, string>;

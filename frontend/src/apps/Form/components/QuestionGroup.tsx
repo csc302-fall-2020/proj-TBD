@@ -8,6 +8,7 @@ import { SDCQuestion, SDCAnswer } from 'utils/sdcTypes';
 
 export type QuestionGroupProps = {
     questions: SDCQuestion[];
+    initialValues?: Record<string, SDCAnswer['Answer']>;
     parentAnswer?: SDCAnswer['Answer'] | null;
     disabled?: boolean;
 };
@@ -18,11 +19,11 @@ const QuestionsWrapper = styled.div`
     justify-content: stretch;
 `;
 
-const QuestionGroup: React.FC<QuestionGroupProps> = props => {
-    const { questions, parentAnswer, disabled } = props;
+const QuestionGroup: React.FC<QuestionGroupProps> = (props) => {
+    const { questions, initialValues, parentAnswer, disabled } = props;
     return (
         <QuestionsWrapper>
-            {questions.map(q => {
+            {questions.map((q) => {
                 if (
                     // antd checkbox component doesn't return values in order. This ensures equality if array.
                     !isNull(parentAnswer) &&
@@ -35,7 +36,7 @@ const QuestionGroup: React.FC<QuestionGroupProps> = props => {
                 }
                 return (
                     (isUndefined(parentAnswer) || isNull(q.enabledState) || isEqual(parentAnswer, q.enabledState)) && (
-                        <Question key={q.QuestionID} question={q} disabled={disabled} />
+                        <Question key={q.QuestionID} initialValues={initialValues} question={q} disabled={disabled} />
                     )
                 );
             })}

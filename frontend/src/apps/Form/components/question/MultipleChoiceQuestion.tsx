@@ -17,10 +17,8 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = (props) =>
         <StyledCheckboxGroup onChange={(e) => onChange?.(e.map((v) => `${v}`))} value={value} disabled={disabled}>
             <Row>
                 {question.options.map((o, i) => (
-                    <Col>
-                        <Checkbox key={i} value={o}>
-                            {o}
-                        </Checkbox>
+                    <Col key={i}>
+                        <Checkbox value={o}>{o}</Checkbox>
                     </Col>
                 ))}
             </Row>
