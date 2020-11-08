@@ -295,11 +295,11 @@ def get_response(FormResponseID):
 
     remove_id_col(form_lst)
 
-    if len(form_lst) > 1:
+    if len(form_lst) != 1:
         return jsonify({'response': 'invalid response'})
 
     else:
-        return jsonify(form_lst), 200
+        return jsonify(form_lst[0]), 200
 
 
 def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID):
