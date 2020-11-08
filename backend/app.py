@@ -61,13 +61,14 @@ def get_form(FormID):
     return jsonify(latest_form), 200
 
 
-def query_form(FormID, DiagnosticProcedureID):
+@APP.route('/forms/search', methods=['GET'])
+def query_form():
     search_query = {}
 
-    if FormID is not None:
-        search_query['FormID'] = FormID
-    if DiagnosticProcedureID is not None:
-        search_query['DiagnosticProcedureID'] = DiagnosticProcedureID
+    FormName = request.args.get('FormName')
+
+    if FormName is not None:
+        search_query['FormName'] = FormName
 
     match_forms = FORM_TABLE.find(search_query, {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'})
 
@@ -102,30 +103,23 @@ def xml_to_json(file_data):
     return file_data
 
 
-@APP.route('/forms', methods=['GET', 'POST'])
+@APP.route('/forms', methods=['POST'])
 def form_processing():
-    if request.method == 'GET':
-        FormID = request.args.get('FormID')
-        DiagnosticProcedureID = request.args.get('DiagnosticProcedureID')
+    if 'file' in request.files:  # Uploaded a xml file
+        file = request.files['file']
 
-        return query_form(FormID, DiagnosticProcedureID)
+        if file.filename.split('.')[-1] != 'xml':
+            abort(406)
 
-    elif request.method == 'POST':
-        if 'file' in request.files:  # Uploaded a xml file
-            file = request.files['file']
+        file_data = file.read()
 
-            if file.filename.split('.')[-1] != 'xml':
-                abort(406)
+        json_content = xml_to_json(file_data)
 
-            file_data = file.read()
+    else:  # Uploaded JSON
+        json_content = request.json
 
-            json_content = xml_to_json(file_data)
-
-        else:  # Uploaded JSON
-            json_content = request.json
-
-        FORM_TABLE.insert_one(json_content)
-        return jsonify(success=True), 201
+    FORM_TABLE.insert_one(json_content)
+    return jsonify(success=True), 201
 
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET'])
