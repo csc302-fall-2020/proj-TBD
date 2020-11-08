@@ -29,7 +29,6 @@ const Form: React.FC<FormProps> = () => {
 
             try {
                 const form = await formRepository.getForm(formId);
-
                 setForm(form);
             } catch (e) {
                 setError(e.message);
