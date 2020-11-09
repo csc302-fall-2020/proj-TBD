@@ -5,13 +5,8 @@ import re
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
-os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
-os.environ['MONGODB_USERNAME'] = 'admin'
-os.environ['MONGODB_PASSWORD'] = 'admin'
-os.environ['MONGODB_DB'] = 'SDC'
-
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -102,7 +97,6 @@ def query_form(parm_dict, restrict_columns=None):
     return latest_form
 
 
-# Done
 def get_latest_forms(form_lst):
     # Condense all duplicate FormIDs into a list
     form_dict = {}
@@ -120,7 +114,6 @@ def get_latest_forms(form_lst):
     return latest_form_lst
 
 
-# Done
 def delete_form(FormID):
     parm_dict = {'FormID': FormID}
 
@@ -131,8 +124,30 @@ def delete_form(FormID):
     return jsonify(success=True), 201
 
 
+def update_form(FormID):
+    parm_dict = {}
+
+    parm_dict['FormID'] = FormID
+    parm_dict['DiagnosticProcedureID'] = request.args.get('DiagnosticProcedureID')
+    parm_dict['Version'] = request.args.get('Version')
+
+    form_lst = list(FORM_TABLE.find(parm_dict))
+
+    if len(form_lst) == 0:
+        return abort(404)
+
+    if len(form_lst) != 1:
+        return abort(406)
+
+    FORM_TABLE.delete(form_lst[0])
+
+    create_form()
+
+    return jsonify(success=True), 201
+
+
 @APP.route('/forms/<FormID>', methods=['GET', 'PATCH', 'DELETE'])
-def process_response(FormID):
+def process_form(FormID):
     if request.method == 'GET':
         parm_dict = {'FormID': FormID}
 
@@ -141,7 +156,7 @@ def process_response(FormID):
         return jsonify(form), 200
 
     elif request.method == 'PATCH':
-        pass
+        return update_form(FormID)
 
     elif request.method == 'DELETE':
         return delete_form(FormID)
@@ -150,7 +165,6 @@ def process_response(FormID):
         abort(405)
 
 
-# Done
 @APP.route('/forms/search', methods=['GET'])
 def search_form():
     parm_dict = {}
@@ -171,16 +185,14 @@ def search_form():
     return jsonify(latest_form_lst), 200
 
 
-# Done
 def xml_to_json(file_data):
 
 
     return file_data
 
 
-# Done
 @APP.route('/forms', methods=['POST'])
-def form_processing():
+def create_form():
     if 'file' in request.files:  # Uploaded a xml file
         file = request.files['file']
 
@@ -198,7 +210,6 @@ def form_processing():
     return jsonify(success=True), 201
 
 
-# Done
 def query_response(parm_dict):
     search_query = get_search_query(parm_dict)
 
@@ -214,7 +225,6 @@ def query_response(parm_dict):
     return form_lst
 
 
-# Done
 def delete_response(FormResponseID):
     parm_dict = {'FormResponseID': FormResponseID}
 
@@ -228,7 +238,26 @@ def delete_response(FormResponseID):
     return jsonify(success=True), 201
 
 
-# Done
+def update_form_response(FormResponseID):
+    parm_dict = {}
+
+    parm_dict['FormResponseID'] = FormResponseID
+
+    form_response_lst = list(FORM_RESPONSE_TABLE.find(parm_dict))
+
+    if len(form_response_lst) == 0:
+        return abort(404)
+
+    if len(form_response_lst) != 1:
+        return abort(406)
+
+    FORM_RESPONSE_TABLE.delete(form_response_lst[0])
+
+    create_form_response()
+
+    return jsonify(success=True), 201
+
+
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
 def process_response(FormResponseID):
     if request.method == 'GET':
@@ -241,7 +270,7 @@ def process_response(FormResponseID):
         return jsonify({'form': form, 'form-response': form_response}), 200
 
     elif request.method == 'PATCH':
-        pass
+        return update_form_response(FormResponseID)
 
     elif request.method == 'DELETE':
         return delete_response(FormResponseID)
@@ -250,7 +279,6 @@ def process_response(FormResponseID):
         abort(405)
 
 
-# Done
 @APP.route('/form-responses/<FormID>/form-responses/search')
 def search_response(FormID):
     parm_dict = {}
@@ -268,9 +296,8 @@ def search_response(FormID):
     return jsonify({'form': form.json, 'form-response': form_response}), 200
 
 
-# Done
 @APP.route('/form-responses', methods=['POST'])
-def create_response():
+def create_form_response():
     # Can only upload JSON
     FORM_RESPONSE_TABLE.insert_one(request.json)
     return jsonify(success=True), 201
