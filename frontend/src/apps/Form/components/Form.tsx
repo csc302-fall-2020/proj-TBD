@@ -49,6 +49,8 @@ const Form: React.FC<FormProps> = () => {
                 form={form}
                 onSubmit={(form) => ({
                     /* TODO: Implement form submission */
+                    console.log(form);
+                    // formRepository.submitForm(form);
                 })}
             />
         );
