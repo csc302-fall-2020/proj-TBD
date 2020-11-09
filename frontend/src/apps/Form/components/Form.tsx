@@ -47,11 +47,10 @@ const Form: React.FC<FormProps> = () => {
         return (
             <FormContainer
                 form={form}
-                onSubmit={(form) => ({
+                onSubmit={(form) => {
                     /* TODO: Implement form submission */
-                    console.log(form);
-                    // formRepository.submitForm(form);
-                })}
+                    formRepository.submitResponse(form);
+                }}
             />
         );
     }

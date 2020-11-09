@@ -129,8 +129,11 @@ const formRepository: FormRepository = {
     
     submitResponse(response: SDCFormResponse): Promise<void> {
         // TODO: Yucen, post request
-        const response = await axios.post(`/forms/${formId}/`);
-        throw new Error('Not Implemented');
+        // const response = await axios.post(`/forms/${formId}/`);
+        console.log(response);
+        return axios.post('/form-responses', response)
+        .then( response => { console.log(response);})
+        .catch( error => { console.log(error); });
     },
 
     async getForm(formId: string): Promise<SDCForm> {
