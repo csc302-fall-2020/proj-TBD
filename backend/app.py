@@ -118,9 +118,7 @@ def get_latest_forms(form_lst):
 def delete_form(FormID):
     parm_dict = {'FormID': FormID}
 
-    form = query_form(parm_dict)
-
-    FORM_TABLE.delete(form)
+    FORM_TABLE.delete_many(parm_dict)
 
     return jsonify(success=True), 201
 

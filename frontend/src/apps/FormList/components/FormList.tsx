@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Input, Button, Spin } from 'antd';
 import { PlusCircleFilled } from '@ant-design/icons';
 
-import FormCard from 'common/FormCard';
+import FormCard from 'common/FormCard/FormCard';
 
 import { getFormMetaDataList } from '../repository';
 
