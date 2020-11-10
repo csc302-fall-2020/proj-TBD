@@ -73,12 +73,18 @@ def process_query(form_lst, max_form_lst_len=None):
     return form_lst
 
 
+def get_form_name_query():
+    request_param = request.args.get('FormName')
+    FormName = '.*' if request_param == '' else request_param
+    return {'$regex': re.compile(FormName, re.I)}
+
+
 def get_search_query(parm_dict):
     search_query = {}
 
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
-            search_query[parm_key] = parm_dict
+            search_query[parm_key] = parm_dict[parm_key]
 
     return search_query
 
@@ -168,7 +174,7 @@ def process_form(FormID):
 def search_form():
     parm_dict = {}
 
-    parm_dict['FormID'] = request.args.get('FormID')
+    parm_dict['FormName'] = get_form_name_query()
     search_dict = get_search_query(parm_dict)
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
