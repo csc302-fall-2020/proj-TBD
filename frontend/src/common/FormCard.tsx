@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
 import { Card, Typography, Menu, Dropdown } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
-import { SDCFormMetaData } from 'utils/sdcTypes';
+import { SDCFormMetaData, FormID } from 'utils/sdcTypes';
 import { getCurrentUser } from 'utils/user';
 
 const StyledCard = styled(Card)`
@@ -27,20 +28,38 @@ const Footer = styled.div`
     justify-content: space-between;
 `;
 
+const _getShareableFormURL = (FormID: FormID) => {
+    return `${window.location.origin}/#/forms/${FormID}`;
+};
+
 interface Props {
     metaData: SDCFormMetaData;
 }
 
 const FormCard: React.FC<Props> = ({ metaData }) => {
-    const handleCopyLink = () => {};
+    const [didCopyLink, setDidCopyLink] = useState(false);
 
-    const handleUpdateForm = () => {};
+    const handleCopyLink = (e: any) => {
+        e.domEvent.stopPropagation();
+        setDidCopyLink(true);
+        setTimeout(() => setDidCopyLink(false), 1500);
+    };
 
-    const handleDeleteForm = () => {};
+    const handleUpdateForm = (e: any) => {
+        e.domEvent.stopPropagation();
+    };
+
+    const handleDeleteForm = (e: any) => {
+        e.domEvent.stopPropagation();
+    };
 
     const renderMenu = (
         <Menu>
-            <Menu.Item onClick={handleCopyLink}>Copy Link</Menu.Item>
+            <Menu.Item onClick={handleCopyLink}>
+                <CopyToClipboard text={_getShareableFormURL(metaData.FormID)}>
+                    <div>{didCopyLink ? 'Copied!' : 'Copy Link'}</div>
+                </CopyToClipboard>
+            </Menu.Item>
             <Menu.Item onClick={handleUpdateForm}>Update Form</Menu.Item>
             <Menu.Item danger onClick={handleDeleteForm}>
                 Delete Form
