@@ -4,7 +4,7 @@ import { SDCAnswer, SDCForm, SDCFormResponse, SDCQuestion } from 'utils/sdcTypes
 import FormSection from './FormSection';
 import styled from 'styled-components';
 import { PATIENT_ID_INPUT_NAME } from '../constants';
-import './formstyle.css';
+
 
 const { Title, Text } = Typography;
 
