@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useParams } from 'react-router-dom';
-import { Alert, Spin } from 'antd';
+import { Alert, message, Spin } from 'antd';
 import { SDCForm } from 'utils/sdcTypes';
 
 import formRepository from '../repository';
@@ -21,6 +21,7 @@ const Form: React.FC<FormProps> = () => {
 
     const [form, setForm] = useState<SDCForm | null>(null);
     const [error, setError] = useState<string | null>(null);
+
 
     useEffect(() => {
         const fetchForm = async (formId: string) => {
@@ -47,9 +48,13 @@ const Form: React.FC<FormProps> = () => {
         return (
             <FormContainer
                 form={form}
-                onSubmit={(form) => {
+                onSubmit={(response) => {
                     /* TODO: Implement form submission */
-                    formRepository.submitResponse(form);
+                    try{
+                        formRepository.submitResponse(response);
+                    } catch (e){
+                        message.error(e.message);
+                    }
                 }}
             />
         );

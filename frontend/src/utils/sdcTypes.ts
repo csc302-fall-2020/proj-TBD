@@ -90,6 +90,7 @@ export interface SDCFormResponse {
     PatientID: PatientID;
     FormFillerID: FormFillerID;
     Answers: { [key: string]: SDCAnswer | null | undefined };
+    IsDraft: boolean;
 }
 
 export interface SDCFormMetaData {

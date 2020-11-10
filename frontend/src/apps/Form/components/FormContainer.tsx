@@ -4,6 +4,7 @@ import { SDCAnswer, SDCForm, SDCFormResponse, SDCQuestion } from 'utils/sdcTypes
 import FormSection from './FormSection';
 import styled from 'styled-components';
 import { PATIENT_ID_INPUT_NAME } from '../constants';
+import './formstyle.css';
 
 const { Title, Text } = Typography;
 
@@ -27,7 +28,7 @@ const _getFormQuestions = (form: SDCForm): SDCQuestion[] => {
 /**
  * Given form values from the AntDesign Form (dict. of questionId: answer) construct a form response
  */
-const _constructFormResponse = (form: SDCForm, formValues: any, previousResponse?: SDCFormResponse) => {
+const _constructFormResponse = (form: SDCForm, formValues: any, isDraft:boolean, previousResponse?: SDCFormResponse) => {
     const questions = _getFormQuestions(form);
 
     const answers: { [questionID: string]: SDCAnswer } = {};
@@ -50,6 +51,7 @@ const _constructFormResponse = (form: SDCForm, formValues: any, previousResponse
         FormFillerID: '', // TODO: set as current user,
         DiagnosticProcedureID: form.DiagnosticProcedureID,
         Answers: answers,
+        IsDraft:isDraft,
     };
 
     return response;
@@ -86,6 +88,7 @@ const StyledForm = styled(AntForm)`
     }
 `;
 
+
 export type FormContainerProps = {
     form: SDCForm;
     response?: SDCFormResponse;
@@ -98,14 +101,15 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
 
     const [form] = Form.useForm();
     const [initialData] = useState(sdcResponse ? _constructInitialFormData(sdcForm, sdcResponse) : null);
-
+    const [isDraft, setDraft] = useState(false);
+    
     return (
         <StyledForm
             initialValues={initialData ?? undefined}
             form={form}
             scrollToFirstError
             layout={'vertical'}
-            onFinish={(values) => onSubmit?.(_constructFormResponse(sdcForm, values, sdcResponse))}
+            onFinish={(values) => onSubmit?.(_constructFormResponse(sdcForm, values, isDraft,sdcResponse))}
         >
             <Row>
                 <Col>
@@ -132,11 +136,15 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                 </Col>
             </Row>
             {!disabled && (
-                <AntForm.Item>
-              
-                    <Button type={'primary'} htmlType={'submit'}>
-                        Submit
-                    </Button>
+                <AntForm.Item >
+                    <Space size={'middle'} >
+                        <Button type={'default'} onClick={() => {setDraft(true); form.submit();}}>
+                            Save to draft
+                        </Button>
+                        <Button type={'primary'} onClick={() => {setDraft(false); form.submit();}} >
+                            Submit
+                        </Button>
+                    </Space>
                 </AntForm.Item>
             )}
         </StyledForm>
