@@ -60,7 +60,7 @@ def get_latest_form(form_lst):
 
 
 def process_query(form_lst, max_form_lst_len=None):
-    form_lst = [form_lst]
+    form_lst = list(form_lst)
 
     remove_id_col(form_lst)
 
@@ -181,7 +181,7 @@ def search_form():
 
     match_form = query_form(search_dict, restrict_columns)
 
-    form_lst = process_query(match_form)
+    form_lst = process_query([match_form])
 
     latest_form_lst = get_latest_forms(form_lst)
 
