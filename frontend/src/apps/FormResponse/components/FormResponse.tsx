@@ -35,10 +35,9 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
             setError(null);
 
             try {
-                const response = await formResponseRepository.getResponse(responseID);
-                const form = await formRepository.getForm(response.FormID);
+                const responseWithForm = await formResponseRepository.getResponse(responseID);
 
-                setResponse({ form, response });
+                setResponse(responseWithForm);
             } catch (e) {
                 setError(e.message);
             }
