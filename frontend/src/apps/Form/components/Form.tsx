@@ -51,6 +51,11 @@ const Form: React.FC<FormProps> = () => {
                 onSubmit={(response) => {
                     try{
                         formRepository.submitResponse(response);
+                        if (response.IsDraft == true){
+                            message.success("Draft is saved!")
+                        } else{
+                            message.success("Submit successfully!")
+                        }                        
                     } catch (e){
                         message.error(e.message);
                     }

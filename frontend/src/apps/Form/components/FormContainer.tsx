@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Button, Col, Divider, Form as AntForm, Form, Input, Row, Space, Typography } from 'antd';
+import { Button, Col, Divider, Form as AntForm, Form, Input, Row, Space, Typography,Modal } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { SDCAnswer, SDCForm, SDCFormResponse, SDCQuestion } from 'utils/sdcTypes';
 import FormSection from './FormSection';
 import styled from 'styled-components';
@@ -7,6 +8,7 @@ import { PATIENT_ID_INPUT_NAME } from '../constants';
 
 
 const { Title, Text } = Typography;
+const { confirm } = Modal;
 
 /**
  * Gets all questions including and inside a question
@@ -78,6 +80,8 @@ const _constructInitialFormData = (form: SDCForm, response: SDCFormResponse): Re
     return data;
 };
 
+
+
 const StyledForm = styled(AntForm)`
     .ant-form-item {
         margin-bottom: 18px;
@@ -97,12 +101,28 @@ export type FormContainerProps = {
 };
 
 const FormContainer: React.FC<FormContainerProps> = (props) => {
+
     const { form: sdcForm, response: sdcResponse, onSubmit, disabled } = props;
 
     const [form] = Form.useForm();
     const [initialData] = useState(sdcResponse ? _constructInitialFormData(sdcForm, sdcResponse) : null);
     const [isDraft, setDraft] = useState(false);
     
+    function showConfirm() {
+        confirm({
+          title: 'Do you want to submit the form?',
+          icon: <ExclamationCircleOutlined />,
+          content: 'Once the form is submitted, you cannot edit it anymore. You can view the responses at the responses page after submit.',
+          onOk() {
+            setDraft(false); 
+            form.submit();
+          },
+          onCancel() {
+            console.log('Cancel');
+          },
+        });
+      }
+
     return (
         <StyledForm
             initialValues={initialData ?? undefined}
@@ -141,7 +161,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                         <Button type={'default'} onClick={() => {setDraft(true); form.submit();}}>
                             Save to draft
                         </Button>
-                        <Button type={'primary'} onClick={() => {setDraft(false); form.submit();}} >
+                        <Button type={'primary'} onClick={() => {showConfirm();}} >
                             Submit
                         </Button>
                     </Space>
