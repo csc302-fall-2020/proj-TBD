@@ -295,11 +295,22 @@ def get_response(FormResponseID):
 
     remove_id_col(form_lst)
 
-    if len(form_lst) > 1:
+    if len(form_lst) == 0:
+        return jsonify({'response': 'Resource not found'}), 404
+
+    if len(form_lst) != 1:
         return jsonify({'response': 'invalid response'})
 
     else:
-        return jsonify(form_lst), 200
+        form_response = form_lst[0]
+
+        form_id = form_response['FormID']
+        form, response_code = get_form(form_id)
+
+        if response_code != 200:
+            abort(response_code)
+
+        return jsonify({'form': form.json, 'form-response': form_response}), 200
 
 
 def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID):
