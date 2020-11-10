@@ -151,7 +151,7 @@ def get_response(FormResponseID):
         if response_code != 200:
             abort(response_code)
 
-        return jsonify({'form': form.json, 'form-response': form_lst}), 200
+        return jsonify({'form': form.json, 'form-response': form_response}), 200
 
 
 def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID):
