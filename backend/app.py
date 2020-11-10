@@ -34,7 +34,9 @@ def invalid_parameter_combination(error):
 
 
 def remove_id_col(form_lst):
-    [x.pop('_id') for x in form_lst]
+    for x in form_lst:
+        if '_id' in x:
+            x.pop('_id')
 
 
 def offset_and_limit(form_lst):
@@ -58,7 +60,7 @@ def get_latest_form(form_lst):
 
 
 def process_query(form_lst, max_form_lst_len=None):
-    form_lst = list(form_lst)
+    form_lst = [form_lst]
 
     remove_id_col(form_lst)
 
@@ -82,9 +84,6 @@ def get_search_query(parm_dict):
 
 
 def query_form(parm_dict, restrict_columns=None):
-    if restrict_columns is None:
-        restrict_columns = {}
-
     match_forms = FORM_TABLE.find(parm_dict, restrict_columns)
 
     form_lst = list(match_forms)
@@ -360,7 +359,7 @@ def create_form():
         if file.filename.split('.')[-1] != 'xml':
             abort(406)
 
-            json_content = xml_to_json(file)
+        json_content = xml_to_json(file)
 
     else:  # Uploaded JSON
         json_content = request.json
@@ -387,7 +386,7 @@ def get_response(FormResponseID):
         form_response = form_lst[0]
 
         form_id = form_response['FormID']
-        form, response_code = get_form(form_id)
+        form, response_code = process_form(form_id)
 
         if response_code != 200:
             abort(response_code)

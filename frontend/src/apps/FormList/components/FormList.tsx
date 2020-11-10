@@ -39,7 +39,6 @@ interface State {
 class FormList extends React.Component<{}, State> {
     async componentDidMount() {
         const formMetaDataList = await getFormMetaDataList({});
-        console.log(formMetaDataList);
         this.setState({ loading: false, formMetaDataList });
     }
 
