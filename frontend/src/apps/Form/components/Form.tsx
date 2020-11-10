@@ -49,7 +49,6 @@ const Form: React.FC<FormProps> = () => {
             <FormContainer
                 form={form}
                 onSubmit={(response) => {
-                    /* TODO: Implement form submission */
                     try{
                         formRepository.submitResponse(response);
                     } catch (e){

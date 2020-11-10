@@ -128,8 +128,6 @@ class SampleFormRepository implements FormRepository {
 const formRepository: FormRepository = {
     
     submitResponse(response: SDCFormResponse): Promise<void> {
-        // TODO: Yucen, post request
-        // const response = await axios.post(`/forms/${formId}/`);
         return axios.post('/form-responses', response);
     },
 
