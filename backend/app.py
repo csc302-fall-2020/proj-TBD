@@ -416,7 +416,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
         for form_response in form_response_lst:
             for form in form_lst:
-                if form['FormID'] == form_response['FormID']:
+                if form['FormID'] == form_response['FormID'] and form['Version'] == form_response['Version']:
                     cross_form_response_lst.append({'form': form, 'form-response': form_response})
         form_response_lst = cross_form_response_lst
 
