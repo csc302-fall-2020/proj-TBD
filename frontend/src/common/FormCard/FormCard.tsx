@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
-import { Card, Typography, Menu, Dropdown, Modal, message } from 'antd';
+import { Card, Typography, Menu, Dropdown } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
 import CopyToClipboard from 'react-copy-to-clipboard';
-
-import { deleteForm } from './repository';
 
 import { SDCFormMetaData, FormID } from 'utils/sdcTypes';
 import { getCurrentUser } from 'utils/user';
@@ -40,8 +38,6 @@ interface Props {
 
 const FormCard: React.FC<Props> = ({ metaData }) => {
     const [didCopyLink, setDidCopyLink] = useState(false);
-    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-    const [deleting, setDeleting] = useState(false);
     const { FormID, FormName, Version } = metaData;
 
     const handleCopyLink = (e: any) => {
@@ -54,24 +50,6 @@ const FormCard: React.FC<Props> = ({ metaData }) => {
         e.domEvent.stopPropagation();
     };
 
-    const handleShowDeleteFormModal = (e: any) => {
-        e.domEvent.stopPropagation();
-        setDeleteModalVisible(true);
-    };
-
-    const handleHideDeleteFormModal = () => setDeleteModalVisible(false);
-
-    const handleDeleteForm = async () => {
-        try {
-            setDeleting(true);
-            await deleteForm(FormID);
-            setDeleteModalVisible(false);
-        } catch (e) {
-            message.error('Something went wrong! Please try again.');
-        }
-        setDeleting(false);
-    };
-
     const renderMenu = (
         <Menu>
             <Menu.Item onClick={handleCopyLink}>
@@ -80,9 +58,6 @@ const FormCard: React.FC<Props> = ({ metaData }) => {
                 </CopyToClipboard>
             </Menu.Item>
             <Menu.Item onClick={handleUpdateForm}>Update Form</Menu.Item>
-            <Menu.Item danger onClick={handleShowDeleteFormModal}>
-                Delete Form
-            </Menu.Item>
         </Menu>
     );
 
@@ -101,17 +76,6 @@ const FormCard: React.FC<Props> = ({ metaData }) => {
                     </InnerWrapper>
                 </StyledCard>
             </NavLink>
-            <Modal
-                title="Delete Form"
-                visible={deleteModalVisible}
-                okType="danger"
-                okText="Delete"
-                onOk={handleDeleteForm}
-                onCancel={handleHideDeleteFormModal}
-                okButtonProps={{ loading: deleting }}
-            >
-                {`Are you sure you want to delete the form "${FormName}"?`}
-            </Modal>
         </>
     );
 };
