@@ -93,23 +93,28 @@ def process_query(form_lst, max_form_lst_len=None):
     return form_lst
 
 
-def get_search_query(parm_dict):
+def get_search_query(parm_dict, error_no_params=True):
     search_query = {}
 
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
             search_query[parm_key] = parm_dict
 
+    if error_no_params and len(search_query) == 0:
+        abort(406)  # missing parameters!
+
     return search_query
 
 
-def query_form(parm_dict, restrict_columns=None):
+def query_form(parm_dict, error_no_params=True, restrict_columns=None, max_form_lst_len=None):
+    search_query = get_search_query(parm_dict, error_no_params)
+
     if restrict_columns is None:
         restrict_columns = {}
 
-    match_forms = FORM_TABLE.find(parm_dict, restrict_columns)
+    match_forms = FORM_TABLE.find(search_query, restrict_columns)
 
-    form_lst = process_query(match_forms)
+    form_lst = process_query(match_forms, max_form_lst_len=max_form_lst_len)
 
     latest_forms = get_latest_forms(form_lst)
 
@@ -122,15 +127,7 @@ def delete_form(FormID, Version):
     parm_dict['FormID'] = FormID
     parm_dict['Version'] = Version
 
-    form_lst = list(FORM_TABLE.find(parm_dict))
-
-    if len(form_lst) == 0:
-        return abort(404)
-
-    if len(form_lst) != 1:
-        return abort(406)
-
-    form = form_lst[0]
+    form = query_form(parm_dict, max_form_lst_len=1)[0]
 
     # Check if is draft
 
@@ -140,11 +137,11 @@ def delete_form(FormID, Version):
 
 
 @APP.route('/forms/<FormID>', methods=['GET'])
-def process_form(FormID):
+def get_form(FormID):
     if request.method == 'GET':
         parm_dict = {'FormID': FormID}
 
-        form = query_form(parm_dict)
+        form = query_form(parm_dict, max_form_lst_len=1)[0]
 
         return jsonify(form), 200
 
@@ -157,10 +154,9 @@ def search_form():
     parm_dict = {}
 
     FormID = request.args.get('FormID')
-    if FormID is not None:
-        parm_dict['FormID'] = FormID
+    parm_dict['FormID'] = FormID
 
-    search_dict = get_search_query(parm_dict)
+    search_dict = get_search_query(parm_dict, error_no_params=False)
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
@@ -343,7 +339,7 @@ def get_json_content():
         if file.filename.split('.')[-1] != 'xml':
             abort(406)
 
-            json_content = xml_to_json(file)
+        json_content = xml_to_json(file)
 
     else:  # Uploaded JSON
         json_content = request.json
@@ -356,6 +352,9 @@ def create_form():
     json_content = get_json_content()
 
     if request.method == 'DELETE' or request.method == 'PATCH':
+        if 'FormID' not in json_content or 'Version' not in json_content:
+            abort(406)  # missing parameters!
+
         FormID = json_content['FormID']
         Version = json_content['Version']
 
@@ -374,44 +373,27 @@ def create_form():
 def get_response(FormResponseID):
     match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
 
-    form_lst = list(match_form_responses)
+    form_response = process_query(match_form_responses, max_form_lst_len=1)[0]
 
-    remove_id_col(form_lst)
+    form_id = form_response['FormID']
+    form, response_code = query_form({'FormID': form_id}, max_form_lst_len=1)[0]
 
-    if len(form_lst) == 0:
-        return jsonify({'response': 'Resource not found'}), 404
+    if response_code != 200:
+        abort(response_code)
 
-    if len(form_lst) != 1:
-        return jsonify({'response': 'invalid response'})
-
-    else:
-        form_response = form_lst[0]
-
-        form_id = form_response['FormID']
-        form, response_code = get_form(form_id)
-
-        if response_code != 200:
-            abort(response_code)
-
-        return jsonify({'form': form.json, 'form-response': form_response}), 200
+    return jsonify({'form': form.json, 'form-response': form_response}), 200
 
 
-def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID):
-    search_query = {}
+def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None):
+    parm_query = {}
 
-    if FormID is not None:
-        search_query['FormID'] = FormID
-    if FormFillerID is not None:
-        search_query['FormFillerID'] = FormFillerID
-    if DiagnosticProcedureID is not None:
-        search_query['DiagnosticProcedureID'] = DiagnosticProcedureID
-    if PatientID is not None:
-        search_query['PatientID'] = PatientID
-    if FormResponseID is not None:
-        search_query['FormResponseID'] = FormResponseID
+    parm_query['FormID'] = FormID
+    parm_query['FormFillerID'] = FormFillerID
+    parm_query['DiagnosticProcedureID'] = DiagnosticProcedureID
+    parm_query['PatientID'] = PatientID
+    parm_query['FormResponseID'] = FormResponseID
 
-    if len(search_query) == 0:
-        abort(406)  # missing parameters!
+    search_query = get_search_query(parm_query, error_no_params=False)
 
     match_forms = FORM_RESPONSE_TABLE.find(search_query)
 
@@ -423,14 +405,12 @@ def query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, Form
 
 
 def delete_response(FormResponseID):
-    parm_dict = {'FormResponseID': FormResponseID}
+    form_response, response_code = get_response(FormResponseID)
 
-    form_response = query_response(parm_dict)
+    if response_code != 200:
+        return form_response, response_code
 
-    if len(form_response) > 1:
-        abort(406)  # Too many results
-
-    FORM_TABLE.delete(form_response[0])
+    FORM_TABLE.delete(form_response['form-response'])
 
     return jsonify(success=True), 201
 
@@ -440,13 +420,11 @@ def update_form_response(FormResponseID):
 
     parm_dict['FormResponseID'] = FormResponseID
 
-    form_response_lst = list(FORM_RESPONSE_TABLE.find(parm_dict))
+    search_query = get_search_query(parm_dict)
 
-    if len(form_response_lst) == 0:
-        return abort(404)
+    query_response = FORM_RESPONSE_TABLE.find(search_query)
 
-    if len(form_response_lst) != 1:
-        return abort(406)
+    form_response_lst = process_query(query_response, max_form_lst_len=1)
 
     FORM_RESPONSE_TABLE.delete(form_response_lst[0])
 
@@ -456,11 +434,9 @@ def update_form_response(FormResponseID):
 
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
-def process_response(FormResponseID):
+def get_response(FormResponseID):
     if request.method == 'GET':
-        parm_dict = {'FormResponseID': FormResponseID}
-
-        form_response = query_response(parm_dict)
+        form_response = get_response(FormResponseID)
 
         form = query_form({'FormID': form_response.json['FormID']})
 
@@ -478,19 +454,16 @@ def process_response(FormResponseID):
 
 @APP.route('/form-responses/<FormID>/form-responses/search')
 def search_response(FormID):
-    parm_dict = {}
+    FormFillerID = request.args.get('FormFillerID')
+    DiagnosticProcedureID = request.args.get('DiagnosticProcedureID')
+    PatientID = request.args.get('PatientID')
+    FormResponseID = request.args.get('FormResponseID')
 
-    parm_dict['FormID'] = FormID
-    parm_dict['FormFillerID'] = request.args.get('FormFillerID')
-    parm_dict['DiagnosticProcedureID'] = request.args.get('DiagnosticProcedureID')
-    parm_dict['PatientID'] = request.args.get('PatientID')
-    parm_dict['FormResponseID'] = request.args.get('FormResponseID')
+    form_response = query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
 
-    form_response = query_response(parm_dict)
+    form = query_form({'FormID': FormID}, max_form_lst_len=1)[0]
 
-    form = query_form({'FormID': FormID})
-
-    return jsonify({'form': form.json, 'form-response': form_response}), 200
+    return jsonify({'form': form, 'form-response': form_response}), 200
 
 
 @APP.route('/form-responses', methods=['POST'])
