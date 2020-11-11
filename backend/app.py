@@ -76,17 +76,19 @@ def get_latest_forms(form_lst, key='FormID'):
     return latest_form_lst
 
 
-def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True, key='FormID', remove_id=True, is_draft='false'):
+def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True, key='FormID', remove_id=True, is_draft=None):
     form_lst = list(form_lst)
 
     if remove_id:
         remove_id_col(form_lst)
 
-    if is_draft:
-        form_lst = [x for x in form_lst if x['IsDraft'] == 'true']
+    # When we're processing a list of SDCForm objects, there is no IsDraft property
+    if is_draft is not None:
+        if is_draft:
+            form_lst = [x for x in form_lst if x['IsDraft'] == 'true']
 
-    else:
-        form_lst = [x for x in form_lst if x['IsDraft'] == 'false']
+        else:
+            form_lst = [x for x in form_lst if x['IsDraft'] == 'false']
 
     if get_latest:
         form_lst = get_latest_forms(form_lst, key)
@@ -500,7 +502,7 @@ def create_form_response():
     # Can only upload JSON
     id = ObjectId()
     json = request.json
-    json['FormResponseID'] = id
+    json['FormResponseID'] = str(id)
     json['_id'] = id
 
     FORM_RESPONSE_TABLE.insert_one(json)

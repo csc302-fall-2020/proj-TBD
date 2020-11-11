@@ -24,7 +24,9 @@ interface SDCQuestionBase<T extends string> {
 }
 
 export interface SDCStringQuestion extends SDCQuestionBase<typeof SDC_QUESTION_TYPE_STRING> {}
+
 export interface SDCDecimalQuestion extends SDCQuestionBase<typeof SDC_QUESTION_TYPE_DECIMAL> {}
+
 export interface SDCIntegerQuestion extends SDCQuestionBase<typeof SDC_QUESTION_TYPE_INTEGER> {}
 
 export interface SDCMultipleChoiceQuestion extends SDCQuestionBase<typeof SDC_QUESTION_TYPE_MULTIPLE_CHOICE> {
@@ -88,12 +90,15 @@ export type SDCAnswer = SDCAnswerTypes[keyof SDCAnswerTypes];
 export interface SDCFormResponse {
     FormResponseID: FormResponseID;
     FormID: FormID;
-    DiagnosticProcedureID: DiagnosticProcedureID;
     PatientID: PatientID;
     FormFillerID: FormFillerID;
     Answers: { [key: string]: SDCAnswer | null | undefined };
     IsDraft: boolean;
     Version: string;
+}
+
+export interface SDCFormResponseForSubmission extends Omit<SDCFormResponse, 'FormResponseID'> {
+    FormResponseID?: string;
 }
 
 export interface SDCFormMetaData {
@@ -104,6 +109,6 @@ export interface SDCFormMetaData {
 }
 
 export interface SDCFormListResponse {
-    items: SDCFormMetaData[],
-    total: number
+    items: SDCFormMetaData[];
+    total: number;
 }
