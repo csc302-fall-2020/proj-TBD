@@ -1,26 +1,15 @@
-import os
-import tempfile
-
-import pytest
-from flask import Flask
-
 from flask_testing import TestCase
-
-import requests
-from backend import app
 import json
 
+from backend import app
 
-# Need to make cases to make sure all json parameters are being uploaded
-
-# For posts, make sure it doesn't already exist
 
 class TestFormEndpoints(TestCase):
     def create_app(self):
-        #app.FORM_TABLE.insert_one({'FormName': 'Test1', 'FormID': '-2', 'Version': '1.0'})
-        #app.FORM_TABLE.insert_one({'FormName': 'Test2', 'FormID': '-2', 'Version': '1.1'})
-        #app.FORM_TABLE.insert_one({'FormName': 'Test3', 'FormID': '-2', 'Version': '1.13'})
-        #app.FORM_TABLE.insert_one({'FormName': 'Test4', 'FormID': '-3', 'Version': '1.0'})
+        app.FORM_TABLE.insert_one({'FormName': 'Test1', 'FormID': '-2', 'Version': '1.0'})
+        app.FORM_TABLE.insert_one({'FormName': 'Test2', 'FormID': '-2', 'Version': '1.1'})
+        app.FORM_TABLE.insert_one({'FormName': 'Test3', 'FormID': '-2', 'Version': '1.13'})
+        app.FORM_TABLE.insert_one({'FormName': 'Test4', 'FormID': '-3', 'Version': '1.0'})
 
         return app.APP
 
@@ -129,9 +118,9 @@ class TestFormEndpoints(TestCase):
 
 class TestResponseFormEndpoints(TestCase):
     def create_app(self):
-        #app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-2', 'FormID': '-3', 'Version': '1.0', 'DiagnosticProcedureID': '-4', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}})
-        #app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-3', 'FormID': '-3', 'Version': '2.0', 'DiagnosticProcedureID': '-4', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}})
-        #app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-4', 'FormID': '-4', 'Version': '1.0', 'DiagnosticProcedureID': '-5', 'PatientID': '-6', 'FormFillerID': '-7', 'Answers': {}})
+        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-2', 'FormID': '-3', 'Version': '1.0', 'DiagnosticProcedureID': '-4', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}})
+        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-3', 'FormID': '-3', 'Version': '2.0', 'DiagnosticProcedureID': '-4', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}})
+        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-4', 'FormID': '-4', 'Version': '1.0', 'DiagnosticProcedureID': '-5', 'PatientID': '-6', 'FormFillerID': '-7', 'Answers': {}})
 
         return app.APP
 
