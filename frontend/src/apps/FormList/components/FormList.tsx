@@ -1,11 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Input, Button, Spin } from 'antd';
+import { Input, Button, Spin, message } from 'antd';
 import { PlusCircleFilled } from '@ant-design/icons';
+import { isEmpty } from 'lodash';
 
-import FormCard from 'common/FormCard';
+import FormCard from 'common/FormCard/FormCard';
 
-import { getFormMetaDataList } from '../repository';
+import { searchMetaDataList } from '../repository';
 
 import { SDCFormMetaData } from 'utils/sdcTypes';
 
@@ -38,9 +39,7 @@ interface State {
 
 class FormList extends React.Component<{}, State> {
     async componentDidMount() {
-        const formMetaDataList = await getFormMetaDataList({});
-        console.log(formMetaDataList);
-        this.setState({ loading: false, formMetaDataList });
+        await this.onSearch('.*');
     }
 
     state: State = {
@@ -48,7 +47,16 @@ class FormList extends React.Component<{}, State> {
         formMetaDataList: []
     };
 
-    onSearch = () => {};
+    onSearch = async (text: string) => {
+        try {
+            this.setState({ loading: true });
+            const formMetaDataList = await searchMetaDataList(isEmpty(text) ? '.*' : text);
+            this.setState({ formMetaDataList });
+        } catch (e) {
+            message.error('Something went wrong! Please try again.');
+        }
+        this.setState({ loading: false });
+    };
 
     handleUploadForm = () => {};
 
@@ -66,19 +74,21 @@ class FormList extends React.Component<{}, State> {
 
     render() {
         const { loading } = this.state;
-        return loading ? (
-            <SpinnerWrapper>
-                <Spin />
-            </SpinnerWrapper>
-        ) : (
+        return (
             <div data-testid="form-list-page">
                 <Actions>
-                    <Search placeholder="Search Forms" onSearch={this.onSearch} enterButton />
+                    <Search loading={loading} placeholder="Search Forms" onSearch={this.onSearch} enterButton />
                     <Button type="primary" icon={<PlusCircleFilled />} onClick={this.handleUploadForm}>
                         Upload Form
                     </Button>
                 </Actions>
-                {this.renderForms()}
+                {loading ? (
+                    <SpinnerWrapper>
+                        <Spin />
+                    </SpinnerWrapper>
+                ) : (
+                    this.renderForms()
+                )}
             </div>
         );
     }
