@@ -7,8 +7,13 @@ import json
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
+os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
+os.environ['MONGODB_USERNAME'] = 'admin'
+os.environ['MONGODB_PASSWORD'] = 'admin'
+os.environ['MONGODB_DB'] = 'SDC'
+
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -439,7 +444,7 @@ def update_form_response(FormResponseID):
 
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
-def get_response(FormResponseID):
+def process_response(FormResponseID):
     if request.method == 'GET':
         form_response = get_response(FormResponseID)
 
