@@ -7,13 +7,8 @@ import json
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
-os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
-os.environ['MONGODB_USERNAME'] = 'admin'
-os.environ['MONGODB_PASSWORD'] = 'admin'
-os.environ['MONGODB_DB'] = 'SDC'
-
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -101,7 +96,7 @@ def get_search_query(parm_dict, error_no_params=True):
 
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
-            search_query[parm_key] = parm_dict
+            search_query[parm_key] = parm_dict[parm_key]
 
     if error_no_params and len(search_query) == 0:
         abort(406)  # missing parameters!
@@ -164,13 +159,14 @@ def search_form():
     parm_dict = {}
 
     FormName = request.args.get('FormName')
-    parm_dict['FormName'] = None if FormName == '.*' else {'$regex': re.compile(FormName, re.I)}
-
-    search_dict = get_search_query(parm_dict, error_no_params=False)
+    if FormName is not None:
+        parm_dict['FormName'] = None if FormName == '.*' else {'$regex': re.compile(FormName, re.I)}
+    else:
+        parm_dict['FormName'] = None
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
-    form_lst = query_form(search_dict, restrict_columns=restrict_columns, min_form_lst_len=-1)
+    form_lst = query_form(parm_dict, restrict_columns=restrict_columns, min_form_lst_len=-1)
 
     latest_form_lst = offset_and_limit(form_lst)
 
