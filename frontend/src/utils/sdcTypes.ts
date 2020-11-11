@@ -91,6 +91,7 @@ export interface SDCFormResponse {
     FormFillerID: FormFillerID;
     Answers: { [key: string]: SDCAnswer | null | undefined };
     IsDraft: boolean;
+    Version: string;
 }
 
 export interface SDCFormMetaData {
