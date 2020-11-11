@@ -9,6 +9,8 @@ export type DiagnosticProcedureID = string;
 export type PatientID = string;
 export type FormFillerID = string;
 export type FormID = string;
+export type FormName = string;
+export type Version = string;
 export type QuestionID = string;
 export type FormResponseID = string;
 
@@ -54,8 +56,8 @@ export interface SDCSection {
 export interface SDCForm {
     FormID: FormID;
     DiagnosticProcedureID: DiagnosticProcedureID;
-    FormName: string;
-    Version: string;
+    FormName: FormName;
+    Version: Version;
     FormSections: SDCSection[];
 }
 
@@ -95,6 +97,11 @@ export interface SDCFormResponse {
 export interface SDCFormMetaData {
     FormID: FormID;
     DiagnosticProcedureID: DiagnosticProcedureID;
-    FormName: string;
-    Version: string;
+    FormName: FormName;
+    Version: Version;
+}
+
+export interface SDCFormListResponse {
+    items: SDCFormMetaData[],
+    total: number
 }

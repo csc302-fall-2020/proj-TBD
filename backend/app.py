@@ -17,6 +17,7 @@ FORM_TABLE = DB.forms
 FORM_RESPONSE_TABLE = DB.form_responses
 
 DEFAULT_LIMIT = 20
+METADATA_COLUMNS = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
 
 @APP.route('/')
@@ -43,9 +44,9 @@ def offset_and_limit(form_lst):
     limit = request.args.get('limit')
 
     if offset is not None:
-        form_lst = form_lst[offset:]
+        form_lst = form_lst[int(offset):]
     if limit is not None:
-        form_lst = form_lst[:limit]
+        form_lst = form_lst[:int(limit)]
     else:
         form_lst = form_lst[:DEFAULT_LIMIT]
 
@@ -169,13 +170,13 @@ def search_form():
 
     parm_dict['FormName'] = request.args.get('FormName')
 
-    restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
+    restrict_columns = METADATA_COLUMNS
 
     form_lst = query_form(parm_dict, restrict_columns=restrict_columns, min_form_lst_len=-1, error_no_params=False)
 
     latest_form_lst = offset_and_limit(form_lst)
 
-    return jsonify(latest_form_lst), 200
+    return jsonify({'items': latest_form_lst, 'total': len(form_lst)}), 200
 
 
 def define_sdc_section(attrib):
@@ -403,26 +404,25 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
     form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID')
 
     # Check if FormID matches FormName
-    if FormName is not None:
-        # Search form name
-        parm_query = {}
-        parm_query['FormName'] = FormName
-        form_lst = query_form(parm_query, min_form_lst_len=-1, error_no_params=False)
 
-        if len(form_lst) == 0:
-            return []
-        else:
-            cross_form_response_lst = []
+    parm_query = {}
+    parm_query['FormName'] = FormName
+    form_lst = query_form(parm_query, restrict_columns=METADATA_COLUMNS, min_form_lst_len=-1, error_no_params=False)
 
-            for form_response in form_response_lst:
-                for form in form_lst:
-                    if form['FormID'] == form_response['FormID']:
-                        cross_form_response_lst.append(form_response)
-            form_response_lst = cross_form_response_lst
+    if len(form_lst) == 0:
+        return []
+    else:
+        cross_form_response_lst = []
 
-    form_response_lst = offset_and_limit(form_response_lst)
+        for form_response in form_response_lst:
+            for form in form_lst:
+                if form['FormID'] == form_response['FormID']:
+                    cross_form_response_lst.append({'form': form, 'form-response': form_response})
+        form_response_lst = cross_form_response_lst
 
-    return form_response_lst
+    latest_form_response_lst = offset_and_limit(form_response_lst)
+
+    return {'items': latest_form_response_lst, 'total': len(form_response_lst)}
 
 
 def delete_response(FormResponseID):
@@ -489,8 +489,13 @@ def search_response():
 @APP.route('/form-responses', methods=['POST'])
 def create_form_response():
     # Can only upload JSON
-    FORM_RESPONSE_TABLE.insert_one(request.json)
-    return jsonify(success=True), 201
+    id = ObjectId()
+    json = request.json
+    json['FormResponseID'] = id
+    json['_id'] = id
+
+    FORM_RESPONSE_TABLE.insert_one(json)
+    return str(id), 201
 
 
 if __name__ == '__main__':
