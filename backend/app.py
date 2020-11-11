@@ -469,8 +469,13 @@ def search_response(FormID):
 @APP.route('/form-responses', methods=['POST'])
 def create_form_response():
     # Can only upload JSON
-    FORM_RESPONSE_TABLE.insert_one(request.json)
-    return jsonify(success=True), 201
+    id = ObjectId()
+    json = request.json
+    json['FormResponseID'] = id
+    json['_id'] = id
+
+    FORM_RESPONSE_TABLE.insert_one(json)
+    return str(id), 201
 
 
 if __name__ == '__main__':
