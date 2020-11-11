@@ -98,25 +98,6 @@ paths:
           $ref: '#/components/responses/SDCForm'
         '404':
           $ref: '#/components/responses/404'
-    patch:
-      tags:
-        - Form
-      summary: Update existing form
-      parameters:
-        - in: path
-          name: FormID
-          required: true
-          schema:
-            $ref: '#/components/schemas/FormID'
-      requestBody:
-        $ref: '#/components/requestBodies/SDCFormBody'
-      responses:
-        '204':
-          $ref: '#/components/responses/204'
-        '400':
-          $ref: '#/components/responses/400'
-        '404':
-          $ref: '#/components/responses/404'
     delete:
       tags:
         - Form
@@ -162,7 +143,20 @@ paths:
 
       responses:
         '201':
-          $ref: '#/components/responses/201'
+          $ref: '#/components/responses/SDCFormMetaDataResponse'
+    patch:
+      tags:
+        - Form
+      summary: Update existing form
+      requestBody:
+        $ref: '#/components/requestBodies/SDCFormBody'
+      responses:
+        '204':
+          $ref: '#/components/responses/SDCFormMetaDataResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
 
   # =============== FORM RESPONSES
   /form-responses/{FormResponseID}:
@@ -477,6 +471,12 @@ components:
       description: "Resource not found"
     403:
       description: "Forbidden"
+    SDCFormMetaDataResponse:
+      description: "An SDC Form Meta Data Response"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SDCFormMetaData'
     SDCFormResponse:
       description: "An SDC Form Response"
       content:
