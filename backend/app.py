@@ -114,22 +114,11 @@ def get_latest_forms(form_lst):
     return latest_form_lst
 
 
-def delete_form(FormID):
-    parm_dict = {'FormID': FormID}
-
-    form = query_form(parm_dict)
-
-    FORM_TABLE.delete(form)
-
-    return jsonify(success=True), 201
-
-
-def update_form(FormID):
+def delete_form(FormID, Version):
     parm_dict = {}
 
     parm_dict['FormID'] = FormID
-    parm_dict['DiagnosticProcedureID'] = request.args.get('DiagnosticProcedureID')
-    parm_dict['Version'] = request.args.get('Version')
+    parm_dict['Version'] = Version
 
     form_lst = list(FORM_TABLE.find(parm_dict))
 
@@ -139,14 +128,16 @@ def update_form(FormID):
     if len(form_lst) != 1:
         return abort(406)
 
-    FORM_TABLE.delete(form_lst[0])
+    form = form_lst[0]
 
-    create_form()
+    # Check if is draft
+
+    FORM_TABLE.delete(form)
 
     return jsonify(success=True), 201
 
 
-@APP.route('/forms/<FormID>', methods=['GET', 'PATCH', 'DELETE'])
+@APP.route('/forms/<FormID>', methods=['GET'])
 def process_form(FormID):
     if request.method == 'GET':
         parm_dict = {'FormID': FormID}
@@ -154,12 +145,6 @@ def process_form(FormID):
         form = query_form(parm_dict)
 
         return jsonify(form), 200
-
-    elif request.method == 'PATCH':
-        return update_form(FormID)
-
-    elif request.method == 'DELETE':
-        return delete_form(FormID)
 
     else:
         abort(405)
@@ -191,8 +176,7 @@ def xml_to_json(file_data):
     return file_data
 
 
-@APP.route('/forms', methods=['POST'])
-def create_form():
+def get_json_content():
     if 'file' in request.files:  # Uploaded a xml file
         file = request.files['file']
 
@@ -206,7 +190,25 @@ def create_form():
     else:  # Uploaded JSON
         json_content = request.json
 
-    FORM_TABLE.insert_one(json_content)
+    return json_content
+
+
+@APP.route('/forms', methods=['DELETE', 'PATCH', 'POST'])
+def create_form():
+    json_content = get_json_content()
+
+    if request.method == 'DELETE' or request.method == 'PATCH':
+        FormID = json_content['FormID']
+        Version = json_content['Version']
+
+        response, response_code = delete_form(FormID, Version)
+
+        if response_code != 201:
+            return response, response_code
+
+    if request.method == 'PATCH' or request.method == 'POST':
+        FORM_TABLE.insert_one(json_content)
+
     return jsonify(success=True), 201
 
 
