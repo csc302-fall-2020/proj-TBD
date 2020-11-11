@@ -96,7 +96,7 @@ def get_search_query(parm_dict, error_no_params=True):
 
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
-            search_query[parm_key] = parm_dict
+            search_query[parm_key] = parm_dict[parm_key]
 
     if error_no_params and len(search_query) == 0:
         abort(406)  # missing parameters!
@@ -159,13 +159,14 @@ def search_form():
     parm_dict = {}
 
     FormName = request.args.get('FormName')
-    parm_dict['FormName'] = None if FormName == '.*' else {'$regex': re.compile(FormName, re.I)}
-
-    search_dict = get_search_query(parm_dict, error_no_params=False)
+    if FormName is not None:
+        parm_dict['FormName'] = None if FormName == '.*' else {'$regex': re.compile(FormName, re.I)}
+    else:
+        parm_dict['FormName'] = None
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
-    form_lst = query_form(search_dict, restrict_columns=restrict_columns, min_form_lst_len=-1)
+    form_lst = query_form(parm_dict, restrict_columns=restrict_columns, min_form_lst_len=-1)
 
     latest_form_lst = offset_and_limit(form_lst)
 
@@ -439,7 +440,7 @@ def update_form_response(FormResponseID):
 
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
-def get_response(FormResponseID):
+def process_response(FormResponseID):
     if request.method == 'GET':
         form_response = get_response(FormResponseID)
 
