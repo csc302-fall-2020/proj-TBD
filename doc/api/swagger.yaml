@@ -117,21 +117,6 @@ paths:
           $ref: '#/components/responses/400'
         '404':
           $ref: '#/components/responses/404'
-    delete:
-      tags:
-        - Form
-      summary: Delete existing form
-      parameters:
-        - in: path
-          name: FormID
-          required: true
-          schema:
-            $ref: '#/components/schemas/FormID'
-      responses:
-        '204':
-          $ref: '#/components/responses/204'
-        '404':
-          $ref: '#/components/responses/404'
 
   /forms/search:
     get:
@@ -415,8 +400,6 @@ components:
           $ref: '#/components/schemas/FormResponseID'
         FormID:
           $ref: '#/components/schemas/FormID'
-        DiagnosticProdedureID:
-          $ref: '#/components/schemas/DiagnosticProcedureID'
         PatientID:
           $ref: '#/components/schemas/PatientID'
         FormFillerID:
