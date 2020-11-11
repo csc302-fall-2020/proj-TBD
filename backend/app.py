@@ -42,9 +42,9 @@ def offset_and_limit(form_lst):
     limit = request.args.get('limit')
 
     if offset is not None:
-        form_lst = form_lst[offset:]
+        form_lst = form_lst[int(offset):]
     if limit is not None:
-        form_lst = form_lst[:limit]
+        form_lst = form_lst[:int(limit)]
     else:
         form_lst = form_lst[:DEFAULT_LIMIT]
 
@@ -171,7 +171,7 @@ def search_form():
 
     latest_form_lst = offset_and_limit(form_lst)
 
-    return jsonify(latest_form_lst), 200
+    return jsonify({'items': latest_form_lst, 'total': len(form_lst)}), 200
 
 
 def define_sdc_section(attrib):
@@ -399,9 +399,9 @@ def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, 
 
     form_lst = process_query(match_forms)
 
-    form_lst = offset_and_limit(form_lst)
+    latest_form_lst = offset_and_limit(form_lst)
 
-    return form_lst
+    return latest_form_lst, len(form_lst)
 
 
 def delete_response(FormResponseID):
@@ -461,11 +461,11 @@ def search_response(FormID):
     PatientID = request.args.get('PatientID')
     FormResponseID = request.args.get('FormResponseID')
 
-    form_response = query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
+    form_responses, total = query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
 
     form = query_form({'FormID': FormID}, min_form_lst_len=-1)
 
-    return jsonify({'form': form, 'form-response': form_response}), 200
+    return jsonify({'form': form, 'form-responses': form_responses, 'total': total}), 200
 
 
 @APP.route('/form-responses', methods=['POST'])

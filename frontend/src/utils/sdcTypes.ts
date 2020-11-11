@@ -100,3 +100,8 @@ export interface SDCFormMetaData {
     FormName: FormName;
     Version: Version;
 }
+
+export interface SDCFormListResponse {
+    items: SDCFormMetaData[],
+    total: number
+}
