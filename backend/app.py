@@ -7,8 +7,13 @@ import json
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
+os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
+os.environ['MONGODB_USERNAME'] = 'admin'
+os.environ['MONGODB_PASSWORD'] = 'admin'
+os.environ['MONGODB_DB'] = 'SDC'
+
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -57,6 +62,23 @@ def get_latest_form(form_lst):
     return [x for x in form_lst if int(re.sub('\D', '', x['Version'])) == max_version][0]
 
 
+def get_latest_forms(form_lst):
+    # Condense all duplicate FormIDs into a list
+    form_dict = {}
+    for form in form_lst:
+        if form['FormID'] in form_dict:
+            form_dict[form['FormID']].append(form)
+        else:
+            form_dict[form['FormID']] = [form]
+
+    # For each FormID, get the latest version of the form
+    latest_form_lst = []
+    for formID in form_dict:
+        latest_form_lst.append(get_latest_form(form_dict[formID]))
+
+    return latest_form_lst
+
+
 def process_query(form_lst, max_form_lst_len=None):
     form_lst = list(form_lst)
 
@@ -87,33 +109,11 @@ def query_form(parm_dict, restrict_columns=None):
 
     match_forms = FORM_TABLE.find(parm_dict, restrict_columns)
 
-    form_lst = list(match_forms)
+    form_lst = process_query(match_forms)
 
-    remove_id_col(form_lst)
+    latest_forms = get_latest_forms(form_lst)
 
-    if len(form_lst) == 0:
-        return abort(404)
-
-    latest_form = get_latest_form(form_lst)
-
-    return latest_form
-
-
-def get_latest_forms(form_lst):
-    # Condense all duplicate FormIDs into a list
-    form_dict = {}
-    for form in form_lst:
-        if form['FormID'] in form_dict:
-            form_dict[form['FormID']].append(form)
-        else:
-            form_dict[form['FormID']] = [form]
-
-    # For each FormID, get the latest version of the form
-    latest_form_lst = []
-    for formID in form_dict:
-        latest_form_lst.append(get_latest_form(form_dict[formID]))
-
-    return latest_form_lst
+    return latest_forms
 
 
 def delete_form(FormID, Version):
@@ -156,18 +156,17 @@ def process_form(FormID):
 def search_form():
     parm_dict = {}
 
-    parm_dict['FormID'] = request.args.get('FormID')
+    FormID = request.args.get('FormID')
+    if FormID is not None:
+        parm_dict['FormID'] = FormID
+
     search_dict = get_search_query(parm_dict)
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
-    match_form = query_form(search_dict, restrict_columns)
+    form_lst = query_form(search_dict, restrict_columns)
 
-    form_lst = process_query(match_form)
-
-    latest_form_lst = get_latest_forms(form_lst)
-
-    latest_form_lst = offset_and_limit(latest_form_lst)
+    latest_form_lst = offset_and_limit(form_lst)
 
     return jsonify(latest_form_lst), 200
 
