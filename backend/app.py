@@ -79,12 +79,15 @@ def get_latest_forms(form_lst):
     return latest_form_lst
 
 
-def process_query(form_lst, max_form_lst_len=None):
+def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None):
     form_lst = list(form_lst)
 
     remove_id_col(form_lst)
 
-    if len(form_lst) == 0:
+    if min_form_lst_len is None:
+        min_form_lst_len = 1
+
+    if len(form_lst) < min_form_lst_len:
         abort(404)  # missing parameters!
 
     if max_form_lst_len is not None and len(form_lst) > max_form_lst_len:
@@ -106,7 +109,7 @@ def get_search_query(parm_dict, error_no_params=True):
     return search_query
 
 
-def query_form(parm_dict, error_no_params=True, restrict_columns=None, max_form_lst_len=None):
+def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True):
     search_query = get_search_query(parm_dict, error_no_params)
 
     if restrict_columns is None:
@@ -114,7 +117,7 @@ def query_form(parm_dict, error_no_params=True, restrict_columns=None, max_form_
 
     match_forms = FORM_TABLE.find(search_query, restrict_columns)
 
-    form_lst = process_query(match_forms, max_form_lst_len=max_form_lst_len)
+    form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len)
 
     latest_forms = get_latest_forms(form_lst)
 
@@ -136,14 +139,24 @@ def delete_form(FormID, Version):
     return jsonify(success=True), 201
 
 
-@APP.route('/forms/<FormID>', methods=['GET'])
+@APP.route('/forms/<FormID>', methods=['GET', 'DELETE'])
 def get_form(FormID):
+    parm_dict = {}
+
     if request.method == 'GET':
-        parm_dict = {'FormID': FormID}
+        parm_dict['FormID'] = FormID
 
         form = query_form(parm_dict, max_form_lst_len=1)[0]
 
         return jsonify(form), 200
+
+    elif request.method == 'DELETE':
+        Version = request.args.get('Version')
+
+        if Version is None:
+            abort(406)  # missing parameters!
+
+        return delete_form(FormID, Version)
 
     else:
         abort(405)
@@ -160,7 +173,7 @@ def search_form():
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
-    form_lst = query_form(search_dict, restrict_columns)
+    form_lst = query_form(search_dict, restrict_columns=restrict_columns, min_form_lst_len=-1)
 
     latest_form_lst = offset_and_limit(form_lst)
 
@@ -347,11 +360,11 @@ def get_json_content():
     return json_content
 
 
-@APP.route('/forms', methods=['DELETE', 'PATCH', 'POST'])
+@APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
 
-    if request.method == 'DELETE' or request.method == 'PATCH':
+    if request.method == 'PATCH':
         if 'FormID' not in json_content or 'Version' not in json_content:
             abort(406)  # missing parameters!
 
@@ -461,7 +474,7 @@ def search_response(FormID):
 
     form_response = query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
 
-    form = query_form({'FormID': FormID}, max_form_lst_len=1)[0]
+    form = query_form({'FormID': FormID}, min_form_lst_len=-1)
 
     return jsonify({'form': form, 'form-response': form_response}), 200
 
