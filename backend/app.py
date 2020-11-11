@@ -101,7 +101,13 @@ def get_search_query(parm_dict, error_no_params=True):
 
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
-            search_query[parm_key] = parm_dict[parm_key]
+            if parm_key == 'FormName':
+                if parm_dict[parm_key] == '.*':
+                    pass
+                else:
+                    search_query[parm_key] = {'$regex': re.compile(parm_dict[parm_key], re.I)}
+            else:
+                search_query[parm_key] = parm_dict[parm_key]
 
     if error_no_params and len(search_query) == 0:
         abort(406)  # missing parameters!
@@ -161,11 +167,7 @@ def get_form(FormID):
 def search_form():
     parm_dict = {}
 
-    FormName = request.args.get('FormName')
-    if FormName is not None:
-        parm_dict['FormName'] = None if FormName == '.*' else {'$regex': re.compile(FormName, re.I)}
-    else:
-        parm_dict['FormName'] = None
+    parm_dict['FormName'] = request.args.get('FormName')
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
@@ -386,10 +388,9 @@ def get_response(FormResponseID, remove_id=True):
     return form_response
 
 
-def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None):
+def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None):
     parm_query = {}
 
-    parm_query['FormID'] = FormID
     parm_query['FormFillerID'] = FormFillerID
     parm_query['DiagnosticProcedureID'] = DiagnosticProcedureID
     parm_query['PatientID'] = PatientID
@@ -399,11 +400,29 @@ def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, 
 
     match_forms = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID')
+    form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID')
 
-    form_lst = offset_and_limit(form_lst)
+    # Check if FormID matches FormName
+    if FormName is not None:
+        # Search form name
+        parm_query = {}
+        parm_query['FormName'] = FormName
+        form_lst = query_form(parm_query, min_form_lst_len=-1, error_no_params=False)
 
-    return form_lst
+        if len(form_lst) == 0:
+            return []
+        else:
+            cross_form_response_lst = []
+
+            for form_response in form_response_lst:
+                for form in form_lst:
+                    if form['FormID'] == form_response['FormID']:
+                        cross_form_response_lst.append(form_response)
+            form_response_lst = cross_form_response_lst
+
+    form_response_lst = offset_and_limit(form_response_lst)
+
+    return form_response_lst
 
 
 def delete_response(FormResponseID):
@@ -454,14 +473,15 @@ def process_response(FormResponseID):
         abort(405)
 
 
-@APP.route('/forms/<FormID>/form-responses/search', methods=['GET'])
-def search_response(FormID):
+@APP.route('/form-responses/search', methods=['GET'])
+def search_response():
+    FormName = request.args.get('FormName')
     FormFillerID = request.args.get('FormFillerID')
     DiagnosticProcedureID = request.args.get('DiagnosticProcedureID')
     PatientID = request.args.get('PatientID')
     FormResponseID = request.args.get('FormResponseID')
 
-    form_response = query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
+    form_response = query_responses(FormName, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
 
     return jsonify(form_response), 200
 
