@@ -220,17 +220,16 @@ paths:
           $ref: '#/components/responses/204'
         '404':
           $ref: '#/components/responses/404'
-  /forms/{FormID}/form-responses/search:
+  /form-responses/search:
     get:
       tags:
          - Form Responses
       summary: Search for form responses
       parameters:
-        - in: path
-          name: FormID
-          required: true
+        - name: FormName
+          in: query
           schema:
-            $ref: '#/components/schemas/FormResponseID'
+            $ref: '#/components/schemas/FormName'
         - name: FormFillerID
           in: query
           schema:
@@ -485,13 +484,25 @@ components:
           schema:
             $ref: '#/components/schemas/SDCFormResponse'
     SDCFormResponseList:
-      description: "A list of SDC Forms"
+      description: "A list of SDC Form Responses"
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/SDCFormResponse'
+            type: object
+            properties:
+              items:
+                description: "The requested data"
+                type: array
+                items:
+                  type: object
+                  properties:
+                    form:
+                      $ref: '#/components/schemas/SDCFormMetaData'
+                    form-response:
+                      $ref: '#/components/schemas/SDCFormResponse'
+              total:
+                description: "The total number of items available to return"
+                type: integer
     SDCForm:
       description: "An SDC Form"
       content:
@@ -503,8 +514,15 @@ components:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/SDCFormMetaData'
+            type: object
+            properties:
+              items:
+                description: "The requested data"
+                type: array
+                items:
+                  $ref: '#/components/schemas/SDCFormMetaData'
+              total:
+                description: "The total number of items available to return"
+                type: integer
 
 

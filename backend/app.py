@@ -43,9 +43,9 @@ def offset_and_limit(form_lst):
     limit = request.args.get('limit')
 
     if offset is not None:
-        form_lst = form_lst[offset:]
+        form_lst = form_lst[int(offset):]
     if limit is not None:
-        form_lst = form_lst[:limit]
+        form_lst = form_lst[:int(limit)]
     else:
         form_lst = form_lst[:DEFAULT_LIMIT]
 
@@ -173,7 +173,7 @@ def search_form():
 
     latest_form_lst = offset_and_limit(form_lst)
 
-    return jsonify(latest_form_lst), 200
+    return jsonify({'items': latest_form_lst, 'total': len(form_lst)}), 200
 
 
 def define_sdc_section(attrib):
@@ -401,9 +401,9 @@ def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, 
 
     form_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID')
 
-    form_lst = offset_and_limit(form_lst)
+    latest_form_lst = offset_and_limit(form_lst)
 
-    return form_lst
+    return latest_form_lst, len(form_lst)
 
 
 def delete_response(FormResponseID):
@@ -469,8 +469,13 @@ def search_response(FormID):
 @APP.route('/form-responses', methods=['POST'])
 def create_form_response():
     # Can only upload JSON
-    FORM_RESPONSE_TABLE.insert_one(request.json)
-    return jsonify(success=True), 201
+    id = ObjectId()
+    json = request.json
+    json['FormResponseID'] = id
+    json['_id'] = id
+
+    FORM_RESPONSE_TABLE.insert_one(json)
+    return str(id), 201
 
 
 if __name__ == '__main__':
