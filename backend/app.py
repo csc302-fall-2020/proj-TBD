@@ -112,9 +112,6 @@ def get_search_query(parm_dict, error_no_params=True):
 def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True):
     search_query = get_search_query(parm_dict, error_no_params)
 
-    if restrict_columns is None:
-        restrict_columns = {}
-
     match_forms = FORM_TABLE.find(search_query, restrict_columns)
 
     form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len)
@@ -166,8 +163,8 @@ def get_form(FormID):
 def search_form():
     parm_dict = {}
 
-    FormID = request.args.get('FormID')
-    parm_dict['FormID'] = FormID
+    FormName = request.args.get('FormName')
+    parm_dict['FormName'] = None if FormName == '.*' else {'$regex': re.compile(FormName, re.I)}
 
     search_dict = get_search_query(parm_dict, error_no_params=False)
 
