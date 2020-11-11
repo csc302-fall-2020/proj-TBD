@@ -116,12 +116,12 @@ def get_search_query(parm_dict, error_no_params=True):
     return search_query
 
 
-def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True, remove_id=True):
+def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True, remove_id=True, get_latest=True):
     search_query = get_search_query(parm_dict, error_no_params)
 
     match_forms = FORM_TABLE.find(search_query, restrict_columns)
 
-    form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len, remove_id=remove_id)
+    form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len, remove_id=remove_id, get_latest=get_latest)
 
     return form_lst
 
@@ -407,7 +407,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
     parm_query = {}
     parm_query['FormName'] = FormName
-    form_lst = query_form(parm_query, restrict_columns=METADATA_COLUMNS, min_form_lst_len=-1, error_no_params=False)
+    form_lst = query_form(parm_query, restrict_columns=METADATA_COLUMNS, min_form_lst_len=-1, error_no_params=False, get_latest=False)
 
     if len(form_lst) == 0:
         return []
