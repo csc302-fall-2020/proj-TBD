@@ -74,10 +74,13 @@ def get_latest_forms(form_lst):
     return latest_form_lst
 
 
-def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None):
+def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True):
     form_lst = list(form_lst)
 
     remove_id_col(form_lst)
+
+    if get_latest:
+        form_lst = get_latest_forms(form_lst)
 
     if min_form_lst_len is None:
         min_form_lst_len = 1
@@ -111,9 +114,7 @@ def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form
 
     form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len)
 
-    latest_forms = get_latest_forms(form_lst)
-
-    return latest_forms
+    return form_lst
 
 
 def delete_form(FormID, Version):
@@ -166,7 +167,7 @@ def search_form():
 
     restrict_columns = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
 
-    form_lst = query_form(parm_dict, restrict_columns=restrict_columns, min_form_lst_len=-1)
+    form_lst = query_form(parm_dict, restrict_columns=restrict_columns, min_form_lst_len=-1, error_no_params=False)
 
     latest_form_lst = offset_and_limit(form_lst)
 
@@ -375,19 +376,12 @@ def create_form():
     return jsonify(success=True), 201
 
 
-@APP.route('/form-responses/<FormResponseID>', methods=['GET'])
 def get_response(FormResponseID):
     match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
 
-    form_response = process_query(match_form_responses, max_form_lst_len=1)[0]
+    form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False)[0]
 
-    form_id = form_response['FormID']
-    form, response_code = query_form({'FormID': form_id}, max_form_lst_len=1)[0]
-
-    if response_code != 200:
-        abort(response_code)
-
-    return jsonify({'form': form.json, 'form-response': form_response}), 200
+    return form_response
 
 
 def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None):
@@ -430,7 +424,7 @@ def update_form_response(FormResponseID):
 
     query_response = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_response_lst = process_query(query_response, max_form_lst_len=1)
+    form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False)
 
     FORM_RESPONSE_TABLE.delete(form_response_lst[0])
 
@@ -444,7 +438,9 @@ def process_response(FormResponseID):
     if request.method == 'GET':
         form_response = get_response(FormResponseID)
 
-        form = query_form({'FormID': form_response.json['FormID']})
+        form_id = form_response['FormID']
+        version = form_response['Version']
+        form = query_form({'FormID': form_id, 'Version': version}, max_form_lst_len=1)[0]
 
         return jsonify({'form': form, 'form-response': form_response}), 200
 
