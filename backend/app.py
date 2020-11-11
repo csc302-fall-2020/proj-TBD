@@ -3,6 +3,7 @@ import os
 import re
 import xml.etree.ElementTree as ET
 import json
+from bson.objectid import ObjectId
 
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
@@ -57,14 +58,14 @@ def get_latest_form(form_lst):
     return [x for x in form_lst if int(re.sub('\D', '', x['Version'])) == max_version][0]
 
 
-def get_latest_forms(form_lst):
+def get_latest_forms(form_lst, key='FormID'):
     # Condense all duplicate FormIDs into a list
     form_dict = {}
     for form in form_lst:
-        if form['FormID'] in form_dict:
-            form_dict[form['FormID']].append(form)
+        if form[key] in form_dict:
+            form_dict[form[key]].append(form)
         else:
-            form_dict[form['FormID']] = [form]
+            form_dict[form[key]] = [form]
 
     # For each FormID, get the latest version of the form
     latest_form_lst = []
@@ -74,13 +75,14 @@ def get_latest_forms(form_lst):
     return latest_form_lst
 
 
-def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True):
+def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True, key='FormID', remove_id=True):
     form_lst = list(form_lst)
 
-    remove_id_col(form_lst)
+    if remove_id:
+        remove_id_col(form_lst)
 
     if get_latest:
-        form_lst = get_latest_forms(form_lst)
+        form_lst = get_latest_forms(form_lst, key)
 
     if min_form_lst_len is None:
         min_form_lst_len = 1
@@ -107,12 +109,12 @@ def get_search_query(parm_dict, error_no_params=True):
     return search_query
 
 
-def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True):
+def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True, remove_id=True):
     search_query = get_search_query(parm_dict, error_no_params)
 
     match_forms = FORM_TABLE.find(search_query, restrict_columns)
 
-    form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len)
+    form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len, remove_id=remove_id)
 
     return form_lst
 
@@ -123,11 +125,11 @@ def delete_form(FormID, Version):
     parm_dict['FormID'] = FormID
     parm_dict['Version'] = Version
 
-    form = query_form(parm_dict, max_form_lst_len=1)[0]
+    form = query_form(parm_dict, max_form_lst_len=1, remove_id=False)[0]
 
     # Check if is draft
 
-    FORM_TABLE.delete(form)
+    FORM_TABLE.delete_one(form)
 
     return jsonify(success=True), 201
 
@@ -376,10 +378,10 @@ def create_form():
     return jsonify(success=True), 201
 
 
-def get_response(FormResponseID):
+def get_response(FormResponseID, remove_id=True):
     match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
 
-    form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False)[0]
+    form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id)[0]
 
     return form_response
 
@@ -397,7 +399,7 @@ def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, 
 
     match_forms = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_lst = process_query(match_forms)
+    form_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID')
 
     form_lst = offset_and_limit(form_lst)
 
@@ -405,12 +407,9 @@ def query_responses(FormID=None, FormFillerID=None, DiagnosticProcedureID=None, 
 
 
 def delete_response(FormResponseID):
-    form_response, response_code = get_response(FormResponseID)
+    form_response = get_response(FormResponseID, remove_id=False)
 
-    if response_code != 200:
-        return form_response, response_code
-
-    FORM_TABLE.delete(form_response['form-response'])
+    FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response['_id'])})
 
     return jsonify(success=True), 201
 
@@ -424,9 +423,9 @@ def update_form_response(FormResponseID):
 
     query_response = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False)
+    form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False)
 
-    FORM_RESPONSE_TABLE.delete(form_response_lst[0])
+    FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
 
     create_form_response()
 
@@ -440,6 +439,7 @@ def process_response(FormResponseID):
 
         form_id = form_response['FormID']
         version = form_response['Version']
+
         form = query_form({'FormID': form_id, 'Version': version}, max_form_lst_len=1)[0]
 
         return jsonify({'form': form, 'form-response': form_response}), 200
@@ -454,7 +454,7 @@ def process_response(FormResponseID):
         abort(405)
 
 
-@APP.route('/form-responses/<FormID>/form-responses/search')
+@APP.route('/forms/<FormID>/form-responses/search', methods=['GET'])
 def search_response(FormID):
     FormFillerID = request.args.get('FormFillerID')
     DiagnosticProcedureID = request.args.get('DiagnosticProcedureID')
@@ -463,9 +463,7 @@ def search_response(FormID):
 
     form_response = query_responses(FormID, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
 
-    form = query_form({'FormID': FormID}, min_form_lst_len=-1)
-
-    return jsonify({'form': form, 'form-response': form_response}), 200
+    return jsonify(form_response), 200
 
 
 @APP.route('/form-responses', methods=['POST'])
