@@ -76,11 +76,17 @@ def get_latest_forms(form_lst, key='FormID'):
     return latest_form_lst
 
 
-def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True, key='FormID', remove_id=True):
+def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True, key='FormID', remove_id=True, is_draft='false'):
     form_lst = list(form_lst)
 
     if remove_id:
         remove_id_col(form_lst)
+
+    if is_draft:
+        form_lst = [x for x in form_lst if x['IsDraft'] == 'true']
+
+    else:
+        form_lst = [x for x in form_lst if x['IsDraft'] == 'false']
 
     if get_latest:
         form_lst = get_latest_forms(form_lst, key)
@@ -389,7 +395,10 @@ def get_response(FormResponseID, remove_id=True):
     return form_response
 
 
-def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None):
+def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft='false'):
+    if IsDraft == 'true' and FormFillerID is not None:
+        abort(406)  # Need to know which clinician to return drafts for
+
     parm_query = {}
 
     parm_query['FormFillerID'] = FormFillerID
@@ -401,7 +410,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
     match_forms = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID')
+    form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID', is_draft=IsDraft)
 
     # Check if FormID matches FormName
 
@@ -496,6 +505,37 @@ def create_form_response():
 
     FORM_RESPONSE_TABLE.insert_one(json)
     return str(id), 201
+
+
+@APP.route('/home/{FormFillerID}', methods=['GET'])
+def get_home_data(FormFillerID):
+    IsDraft = 'true'
+    popular_limit = 5
+
+    form_response = query_responses(FormFillerID=FormFillerID, IsDraft=IsDraft)
+
+    all_clinician_forms = query_responses(FormFillerID=FormFillerID)['items']
+
+    popularity_dict = {}
+
+    for tmp in all_clinician_forms:
+        form = tmp['form']
+        if form['FormID'] not in popularity_dict:
+            popularity_dict[form['FormID']] = 1
+        else:
+            popularity_dict[form['FormID']] += 1
+
+    popularity_lst = sorted(list(popularity_dict.items()), key=lambda x: x[1], reverse=True)
+
+    form_id_by_popularity = [x[0] for x in popularity_lst]
+    form_id_by_popularity = form_id_by_popularity[:popular_limit]
+
+    form_meta_by_popularity = []
+
+    for form_id in form_id_by_popularity:
+        form_meta_by_popularity.append(query_form({'FormID': form_id}, max_form_lst_len=1, restrict_columns=METADATA_COLUMNS)[0])
+
+    return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
 
 if __name__ == '__main__':
