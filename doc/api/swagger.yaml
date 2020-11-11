@@ -422,6 +422,8 @@ components:
           $ref: '#/components/schemas/PatientID'
         FormFillerID:
           $ref: '#/components/schemas/FormFillerID'
+        Version:
+          $ref: '#/components/schemas/Version'
         Answers:
           type: object
           additionalProperties:
