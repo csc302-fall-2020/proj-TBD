@@ -5,6 +5,7 @@ import { SDCAnswer, SDCForm, SDCFormResponse, SDCQuestion } from 'utils/sdcTypes
 import FormSection from './FormSection';
 import styled from 'styled-components';
 import { PATIENT_ID_INPUT_NAME } from '../constants';
+import { getCurrentUser } from 'utils/user';
 
 
 const { Title, Text } = Typography;
@@ -50,10 +51,11 @@ const _constructFormResponse = (form: SDCForm, formValues: any, isDraft:boolean,
         FormResponseID: previousResponse?.FormResponseID ?? '',
         PatientID: formValues[PATIENT_ID_INPUT_NAME] as string,
         FormID: form.FormID,
-        FormFillerID: '', // TODO: set as current user,
+        FormFillerID: getCurrentUser().getID(),
         DiagnosticProcedureID: form.DiagnosticProcedureID,
         Answers: answers,
         IsDraft:isDraft,
+        Version: form.Version
     };
 
     return response;
