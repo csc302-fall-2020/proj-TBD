@@ -3,7 +3,7 @@ import os
 import re
 import xml.etree.ElementTree as ET
 import json
-import bson
+from bson.objectid import ObjectId
 
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
@@ -472,7 +472,7 @@ def search_response(FormID):
 @APP.route('/form-responses', methods=['POST'])
 def create_form_response():
     # Can only upload JSON
-    id = bson.ObjectId()
+    id = ObjectId()
     json = request.json
     json['FormResponseID'] = id
     json['_id'] = id
