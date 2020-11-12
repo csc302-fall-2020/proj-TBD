@@ -70,9 +70,12 @@ const FormFillerFormResponse: React.FC = () => {
                                             />
                                         </Tooltip>
                                     )}
-                                    <NavLink to={`/${clinicianID}/forms/${response.form.FormID}`}>
-                                        <Button type="ghost" shape="circle" icon={<PlusOutlined />} />
-                                    </NavLink>
+                                    <Tooltip title={`New ${response.form.FormName}`}>
+                                        <NavLink to={`/${clinicianID}/forms/${response.form.FormID}`}>
+                                            <Button type="ghost" shape="circle" icon={<PlusOutlined />} />
+                                        </NavLink>
+                                    </Tooltip>
+
                                     <Tooltip
                                         title={didCopyLink ? 'Copied!' : 'Share link'}
                                         onVisibleChange={(visible) => visible && setDidCopyLink(false)}
