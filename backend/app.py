@@ -386,7 +386,8 @@ def create_form():
     if request.method == 'PATCH' or request.method == 'POST':
         FORM_TABLE.insert_one(json_content)
 
-    return jsonify(success=True), 201
+    form = query_form({'FormID': json_content['FormID']}, max_form_lst_len=1)[0]
+    return jsonify(form), 201
 
 
 def get_response(FormResponseID, remove_id=True, is_draft=None):
