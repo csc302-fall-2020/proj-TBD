@@ -130,6 +130,7 @@ export interface SDCFormResponseListMetaData {
     key: string,
     PatientID: string,
     FormID: string,
+    FormName:string,
     Date: string,
     FormFillerID:string,
     ResponseID:string
