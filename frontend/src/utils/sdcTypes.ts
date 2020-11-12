@@ -112,3 +112,25 @@ export interface SDCFormListResponse {
     items: SDCFormMetaData[];
     total: number;
 }
+
+export interface SDCFormResponseParams {
+    FormName:FormName;
+    FormFillerID: FormFillerID;
+    DiagnosticProcedureID: DiagnosticProcedureID;  
+    PatientID: PatientID;
+    FormResponseID: FormResponseID;
+}
+
+export interface SDCFormResponseListResponse { 
+    items: { form: SDCFormMetaData, 'form-response': SDCFormResponse }[], 
+    total: number 
+}
+
+export interface SDCFormResponseListMetaData {     
+    key: string,
+    PatientID: string,
+    FormID: string,
+    Date: string,
+    FormFillerID:string,
+    ResponseID:string
+}
