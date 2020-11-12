@@ -437,6 +437,9 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 def delete_response(FormResponseID):
     form_response = get_response(FormResponseID, remove_id=False)
 
+    if 'IsDraft' not in form_response or form_response['IsDraft'] != 'true':
+        abort(405)  # Form response must be a draft to delete
+
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response['_id'])})
 
     return jsonify(success=True), 201
