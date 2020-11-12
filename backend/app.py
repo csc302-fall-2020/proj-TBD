@@ -493,7 +493,7 @@ def create_form_response():
     validate_form_response(json)
 
     FormResponseID = ObjectId() if json['FormResponseID'] is None else ObjectId(json['FormResponseID'])
-    json['FormResponseID'] = FormResponseID
+    json['FormResponseID'] = str(FormResponseID)
     json['_id'] = FormResponseID
 
     FORM_RESPONSE_TABLE.insert_one(json)
