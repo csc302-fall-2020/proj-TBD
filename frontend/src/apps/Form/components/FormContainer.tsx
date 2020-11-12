@@ -8,6 +8,7 @@ import { PATIENT_ID_INPUT_NAME } from '../constants';
 import { getCurrentUser } from 'utils/user';
 import formRepository from '../repository';
 import { Redirect } from 'react-router-dom';
+import { isEqual } from 'lodash';
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
@@ -129,6 +130,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                 let submittedResponse: SDCFormResponse | undefined;
                 try {
                     const response = _constructFormResponse(sdcForm, values, isDraft, sdcResponse);
+                    await new Promise((res) => setTimeout(() => res(), 2000));
                     const responseID = await formRepository.submitResponse(response);
 
                     if (response.IsDraft) {
@@ -185,7 +187,16 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
             scrollToFirstError
             layout={'vertical'}
             onFinish={(values) => !loading && doSubmit(values)}
-            onFinishFailed={() => !loading && isDraft && doSubmit(form.getFieldsValue())}
+            onFinishFailed={(error) => {
+                if (!loading && isDraft) {
+                    // Some questions (patient ID) are always mandatory
+                    if (error.errorFields.find((field) => isEqual(field.name, [PATIENT_ID_INPUT_NAME]))) {
+                        return;
+                    }
+                    // Otherwise we submit the draft response
+                    doSubmit(form.getFieldsValue());
+                }
+            }}
         >
             <Row>
                 <Col>
