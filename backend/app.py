@@ -505,7 +505,7 @@ def validate_form_response(json):
     for field in required_fields:
         if field not in json:
             abort(406)
-        if field != 'FormResponseID' and json[field] is None:
+        if field != 'FormResponseID' and (json[field] is None or json[field] == ""):
             abort(406)
 
     # Get form and check if form exists, if it does check if the version exists
