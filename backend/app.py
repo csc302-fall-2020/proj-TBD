@@ -3,6 +3,7 @@ import os
 import re
 import xml.etree.ElementTree as ET
 import json
+import pymongo
 from bson.objectid import ObjectId
 
 from flask import Flask, Response, request, jsonify, abort, render_template
@@ -76,11 +77,18 @@ def get_latest_forms(form_lst, key='FormID'):
     return latest_form_lst
 
 
-def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True, key='FormID', remove_id=True):
+def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_latest=True, key='FormID', remove_id=True, is_draft=None):
     form_lst = list(form_lst)
 
     if remove_id:
         remove_id_col(form_lst)
+
+    # When we're processing a list of SDCForm objects, there is no IsDraft property
+    if is_draft is True:
+        form_lst = [x for x in form_lst if 'IsDraft' in x and x['IsDraft'] is True]
+
+    elif is_draft is False:
+        form_lst = [x for x in form_lst if 'IsDraft' not in x or x['IsDraft'] is False]
 
     if get_latest:
         form_lst = get_latest_forms(form_lst, key)
@@ -381,15 +389,18 @@ def create_form():
     return jsonify(success=True), 201
 
 
-def get_response(FormResponseID, remove_id=True):
+def get_response(FormResponseID, remove_id=True, is_draft=None):
     match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
 
-    form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id)[0]
+    form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id, is_draft=is_draft)[0]
 
     return form_response
 
 
-def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None):
+def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft=False):
+    if IsDraft is True and FormFillerID is not None:
+        abort(406)  # Need to know which clinician to return drafts for
+
     parm_query = {}
 
     parm_query['FormFillerID'] = FormFillerID
@@ -401,7 +412,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
     match_forms = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID')
+    form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID', is_draft=IsDraft)
 
     # Check if FormID matches FormName
 
@@ -418,6 +429,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
             for form in form_lst:
                 if form['FormID'] == form_response['FormID'] and form['Version'] == form_response['Version']:
                     cross_form_response_lst.append({'form': form, 'form-response': form_response})
+                    break
         form_response_lst = cross_form_response_lst
 
     latest_form_response_lst = offset_and_limit(form_response_lst)
@@ -426,7 +438,10 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
 
 def delete_response(FormResponseID):
-    form_response = get_response(FormResponseID, remove_id=False)
+    form_response = get_response(FormResponseID, remove_id=False, is_draft=True)
+
+    if 'IsDraft' not in form_response or form_response['IsDraft'] is False:
+        abort(405)  # Form response must be a draft to delete
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response['_id'])})
 
@@ -442,7 +457,7 @@ def update_form_response(FormResponseID):
 
     query_response = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False)
+    form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False, is_draft=True)
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
 
@@ -492,25 +507,55 @@ def create_form_response():
     json = request.json
     validate_form_response(json)
 
-    FormResponseID = ObjectId() if json['FormResponseID'] is None else ObjectId(json['FormResponseID'])
-    json['FormResponseID'] = str(FormResponseID)
-    json['_id'] = FormResponseID
+    max_response_id = FORM_RESPONSE_TABLE.find_one(sort=[('FormResponseID', pymongo.DESCENDING)])['FormResponseID']
+
+    FormResponseID = json['FormResponseID'] if 'FormResponseID' in json else str(int(max_response_id) + 1)
+    json['FormResponseID'] = FormResponseID
 
     FORM_RESPONSE_TABLE.insert_one(json)
-    return str(FormResponseID), 201
+    return FormResponseID, 201
 
 
 def validate_form_response(json):
-    required_fields = ['FormID', 'FormResponseID', 'PatientID', 'FormFillerID', 'Version', 'Answers']
+    required_fields = ['FormID', 'PatientID', 'FormFillerID', 'Version', 'Answers']
     for field in required_fields:
         if field not in json:
             abort(406)
         if field != 'FormResponseID' and (json[field] is None or json[field] == ""):
             abort(406)
 
-    # Get form and check if form exists, if it does check if the version exists
     parm_dict = {'FormID': json['FormID'], 'Version': json['Version']}
     query_form(parm_dict, min_form_lst_len=1, get_latest=False)
+
+
+@APP.route('/home/{FormFillerID}', methods=['GET'])
+def get_home_data(FormFillerID):
+    popular_limit = 5
+
+    form_response = query_responses(FormFillerID=FormFillerID, IsDraft=True)
+
+    all_clinician_forms = query_responses(FormFillerID=FormFillerID)['items']
+
+    popularity_dict = {}
+
+    for tmp in all_clinician_forms:
+        form = tmp['form']
+        if form['FormID'] not in popularity_dict:
+            popularity_dict[form['FormID']] = 1
+        else:
+            popularity_dict[form['FormID']] += 1
+
+    popularity_lst = sorted(list(popularity_dict.items()), key=lambda x: x[1], reverse=True)
+
+    form_id_by_popularity = [x[0] for x in popularity_lst]
+    form_id_by_popularity = form_id_by_popularity[:popular_limit]
+
+    form_meta_by_popularity = []
+
+    for form_id in form_id_by_popularity:
+        form_meta_by_popularity.append(query_form({'FormID': form_id}, max_form_lst_len=1, restrict_columns=METADATA_COLUMNS)[0])
+
+    return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
 
 if __name__ == '__main__':

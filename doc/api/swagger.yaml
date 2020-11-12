@@ -416,6 +416,9 @@ components:
             - $ref: '#/components/schemas/SDCTrueFalseAnswer'
           discriminator:
             propertyName: AnswerType
+      IsDraft:
+        type: boolean
+        description: "tells if the response is a draft"        
     SDCFormMetaData:
         type: object
         description: "An object containing MetaData to a SDCForm"

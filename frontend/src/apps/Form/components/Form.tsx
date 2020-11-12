@@ -44,14 +44,7 @@ const Form: React.FC<FormProps> = () => {
     }
 
     if (form) {
-        return (
-            <FormContainer
-                form={form}
-                onSubmit={(form) => ({
-                    /* TODO: Implement form submission */
-                })}
-            />
-        );
+        return <FormContainer form={form} />;
     }
 
     return (

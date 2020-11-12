@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { SDCForm, SDCFormResponse } from 'utils/sdcTypes';
 import formResponseRepository from '../repository';
-import formRepository from 'apps/Form/repository';
 import FormContainer from 'apps/Form/components/FormContainer';
-import { Alert, Spin } from 'antd';
+import { Alert, Spin, Typography } from 'antd';
 import styled from 'styled-components';
+
+const { Title } = Typography;
 
 const SpinnerWrapper = styled.div`
     display: flex;
@@ -38,15 +39,14 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
                 const responseWithForm = await formResponseRepository.getResponse(responseID);
 
                 setResponse(responseWithForm);
+                onReceiveResponse?.(responseWithForm);
             } catch (e) {
                 setError(e.message);
             }
         };
 
         fetchResponse(responseID);
-    }, [responseID]);
-
-    useEffect(() => onReceiveResponse?.(response), [onReceiveResponse, response]);
+    }, [onReceiveResponse, responseID]);
 
     // If we go from enabled to disabled, we need to reset any changes (to the response) that may have been made
     useEffect(
@@ -55,7 +55,7 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
                 response
                     ? {
                           form: response.form,
-                          response: { ...response.response },
+                          response: { ...response.response }
                       }
                     : null
             ),
@@ -67,7 +67,27 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
     }
 
     if (response) {
-        return <FormContainer {...response} disabled={!enabled} />;
+        return (
+            <>
+                {response.response.IsDraft && (
+                    <Title level={3} type={'secondary'}>
+                        DRAFT
+                    </Title>
+                )}
+                <FormContainer
+                    {...response}
+                    disabled={!enabled}
+                    onSubmit={(newResponse) => {
+                        const withForm = {
+                            form: response.form,
+                            response: newResponse
+                        };
+                        setResponse(withForm);
+                        onReceiveResponse?.(withForm)
+                    }}
+                />
+            </>
+        );
     }
 
     return (

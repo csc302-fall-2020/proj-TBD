@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { Button, Col, Divider, Form as AntForm, Form, Input, Row, Space, Typography } from 'antd';
-import { SDCAnswer, SDCForm, SDCFormResponse, SDCQuestion } from 'utils/sdcTypes';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Button, Col, Divider, Form as AntForm, Form, Input, Row, Space, Typography, Modal, message } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { SDCAnswer, SDCForm, SDCFormResponse, SDCFormResponseForSubmission, SDCQuestion } from 'utils/sdcTypes';
 import FormSection from './FormSection';
 import styled from 'styled-components';
 import { PATIENT_ID_INPUT_NAME } from '../constants';
+import { getCurrentUser } from 'utils/user';
+import formRepository from '../repository';
+import { Redirect } from 'react-router-dom';
+import { isEqual } from 'lodash';
 
 const { Title, Text } = Typography;
+const { confirm } = Modal;
 
 /**
  * Gets all questions including and inside a question
@@ -27,7 +33,12 @@ const _getFormQuestions = (form: SDCForm): SDCQuestion[] => {
 /**
  * Given form values from the AntDesign Form (dict. of questionId: answer) construct a form response
  */
-const _constructFormResponse = (form: SDCForm, formValues: any, previousResponse?: SDCFormResponse) => {
+const _constructFormResponse = (
+    form: SDCForm,
+    formValues: any,
+    isDraft: boolean,
+    previousResponse?: SDCFormResponse
+) => {
     const questions = _getFormQuestions(form);
 
     const answers: { [questionID: string]: SDCAnswer } = {};
@@ -36,20 +47,21 @@ const _constructFormResponse = (form: SDCForm, formValues: any, previousResponse
             const answer = {
                 QuestionID: q.QuestionID,
                 Answer: formValues[q.QuestionID],
-                AnswerType: q.QuestionType,
+                AnswerType: q.QuestionType
             };
 
             answers[q.QuestionID] = answer;
         }
     });
 
-    const response: SDCFormResponse = {
-        FormResponseID: previousResponse?.FormResponseID ?? '',
+    const response: SDCFormResponseForSubmission = {
+        FormResponseID: previousResponse?.FormResponseID,
         PatientID: formValues[PATIENT_ID_INPUT_NAME] as string,
         FormID: form.FormID,
-        FormFillerID: '', // TODO: set as current user,
-        DiagnosticProcedureID: form.DiagnosticProcedureID,
+        FormFillerID: getCurrentUser().getID(),
         Answers: answers,
+        IsDraft: isDraft,
+        Version: form.Version
     };
 
     return response;
@@ -61,9 +73,9 @@ const _constructFormFieldData = (form: SDCForm, response: SDCFormResponse) => {
     return [
         ...questions.map((question) => ({
             name: question.QuestionID,
-            value: response.Answers[question.QuestionID]?.Answer,
+            value: response.Answers[question.QuestionID]?.Answer
         })),
-        { name: PATIENT_ID_INPUT_NAME, value: response.PatientID },
+        { name: PATIENT_ID_INPUT_NAME, value: response.PatientID }
     ];
 };
 
@@ -89,15 +101,92 @@ const StyledForm = styled(AntForm)`
 export type FormContainerProps = {
     form: SDCForm;
     response?: SDCFormResponse;
-    onSubmit?: (response: SDCFormResponse) => void;
     disabled?: boolean;
+    onSubmit?: (response: SDCFormResponse) => void;
 };
 
 const FormContainer: React.FC<FormContainerProps> = (props) => {
-    const { form: sdcForm, response: sdcResponse, onSubmit, disabled } = props;
+    const { form: sdcForm, response: sdcResponse, onSubmit } = props;
 
     const [form] = Form.useForm();
     const [initialData] = useState(sdcResponse ? _constructInitialFormData(sdcForm, sdcResponse) : null);
+    const [isDraft, setDraft] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [responseID, setResponseID] = useState<string | null>(null);
+
+    const disabled = loading || props.disabled;
+
+    useEffect(() => {
+        if (sdcResponse) {
+            form.setFields(_constructFormFieldData(sdcForm, sdcResponse));
+        }
+    }, [sdcResponse, sdcForm, form]);
+
+    const doSubmit = useCallback(
+        (values: any) => {
+            const _doSubmit = async () => {
+                setLoading(true);
+
+                let submittedResponse: SDCFormResponse | undefined;
+                try {
+                    const response = _constructFormResponse(sdcForm, values, isDraft, sdcResponse);
+                    if (response.FormResponseID) {
+                        await formRepository.updateResponse(response);
+
+                        submittedResponse = {
+                            ...response,
+                            FormResponseID: response.FormResponseID
+                        };
+                    } else {
+                        const responseID = await formRepository.submitResponse(response);
+
+                        submittedResponse = {
+                            ...response,
+                            FormResponseID: responseID
+                        };
+                    }
+
+                    if (response.IsDraft) {
+                        message.success('Draft is saved!');
+                    } else {
+                        message.success('Submit successfully!');
+                    }
+                } catch (e) {
+                    message.error(e.message);
+                } finally {
+                    setLoading(false);
+
+                    if (submittedResponse) {
+                        onSubmit?.(submittedResponse);
+                        setResponseID(submittedResponse.FormResponseID);
+                    }
+                }
+            };
+
+            _doSubmit();
+        },
+        [isDraft, sdcForm, sdcResponse, onSubmit]
+    );
+
+    function showConfirm() {
+        confirm({
+            title: 'Do you want to submit the form?',
+            icon: <ExclamationCircleOutlined />,
+            content:
+                'Once the form is submitted, you cannot edit it anymore. You can view the responses at the responses page after submit.',
+            onOk() {
+                setDraft(false);
+                form.submit();
+            },
+            onCancel() {
+                console.log('Cancel');
+            }
+        });
+    }
+
+    if (responseID && responseID !== sdcResponse?.FormResponseID) {
+        return <Redirect to={`/${getCurrentUser().getID()}/responses/${responseID}`} />;
+    }
 
     return (
         <StyledForm
@@ -105,7 +194,25 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
             form={form}
             scrollToFirstError
             layout={'vertical'}
-            onFinish={(values) => onSubmit?.(_constructFormResponse(sdcForm, values, sdcResponse))}
+            onFinish={(values) => !loading && doSubmit(values)}
+            onFinishFailed={(error) => {
+                if (!loading && isDraft) {
+                    // Some questions (patient ID) are always mandatory
+                    if (error.errorFields.find((field) => isEqual(field.name, [PATIENT_ID_INPUT_NAME]))) {
+                        return;
+                    }
+
+                    const formValues = form.getFieldsValue();
+
+                    // Otherwise we submit the draft response
+                    doSubmit(formValues);
+
+                    // We need to clear question fields of any errors they may have
+                    // (which are ignored b/c it's a draft submit)
+                    form.resetFields();
+                    form.setFields(Object.keys(formValues).map((name) => ({ name, value: formValues[name] })));
+                }
+            }}
         >
             <Row>
                 <Col>
@@ -131,11 +238,31 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                     ))}
                 </Col>
             </Row>
-            {!disabled && (
+            {(loading || !disabled) && (
                 <AntForm.Item>
-                    <Button type={'primary'} htmlType={'submit'}>
-                        Submit
-                    </Button>
+                    <Space size={'middle'}>
+                        <Button
+                            type={'default'}
+                            disabled={loading}
+                            loading={loading && isDraft}
+                            onClick={() => {
+                                setDraft(true);
+                                form.submit();
+                            }}
+                        >
+                            Save to draft
+                        </Button>
+                        <Button
+                            disabled={loading}
+                            loading={loading && !isDraft}
+                            type={'primary'}
+                            onClick={() => {
+                                showConfirm();
+                            }}
+                        >
+                            Submit
+                        </Button>
+                    </Space>
                 </AntForm.Item>
             )}
         </StyledForm>
