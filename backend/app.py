@@ -8,8 +8,13 @@ from bson.objectid import ObjectId
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
+os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
+os.environ['MONGODB_USERNAME'] = 'admin'
+os.environ['MONGODB_PASSWORD'] = 'admin'
+os.environ['MONGODB_DB'] = 'SDC'
+
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -83,12 +88,11 @@ def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_la
         remove_id_col(form_lst)
 
     # When we're processing a list of SDCForm objects, there is no IsDraft property
-    if is_draft is not None:
-        if is_draft:
-            form_lst = [x for x in form_lst if x['IsDraft'] == 'true']
+    if is_draft == 'true':
+        form_lst = [x for x in form_lst if 'IsDraft' in x and x['IsDraft'] == 'true']
 
-        else:
-            form_lst = [x for x in form_lst if x['IsDraft'] == 'false']
+    else:
+        form_lst = [x for x in form_lst if 'IsDraft' not in x or x['IsDraft'] == 'false']
 
     if get_latest:
         form_lst = get_latest_forms(form_lst, key)
@@ -389,10 +393,10 @@ def create_form():
     return jsonify(success=True), 201
 
 
-def get_response(FormResponseID, remove_id=True):
+def get_response(FormResponseID, remove_id=True, is_draft=None):
     match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
 
-    form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id)[0]
+    form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id, is_draft=is_draft)[0]
 
     return form_response
 
@@ -429,6 +433,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
             for form in form_lst:
                 if form['FormID'] == form_response['FormID'] and form['Version'] == form_response['Version']:
                     cross_form_response_lst.append({'form': form, 'form-response': form_response})
+                    break
         form_response_lst = cross_form_response_lst
 
     latest_form_response_lst = offset_and_limit(form_response_lst)
@@ -437,7 +442,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
 
 def delete_response(FormResponseID):
-    form_response = get_response(FormResponseID, remove_id=False)
+    form_response = get_response(FormResponseID, remove_id=False, is_draft='true')
 
     if 'IsDraft' not in form_response or form_response['IsDraft'] != 'true':
         abort(405)  # Form response must be a draft to delete
@@ -506,16 +511,17 @@ def create_form_response():
     json = request.json
     validate_form_response(json)
 
-    FormResponseID = ObjectId() if json['FormResponseID'] is None else ObjectId(json['FormResponseID'])
-    json['FormResponseID'] = str(FormResponseID)
-    json['_id'] = FormResponseID
+    max_response_id = FORM_RESPONSE_TABLE.find_one(sort=[('FormResponseID', 1)])['FormResponseID']
+
+    FormResponseID = str(int(max_response_id) + 1)
+    json['FormResponseID'] = FormResponseID
 
     FORM_RESPONSE_TABLE.insert_one(json)
     return str(FormResponseID), 201
 
 
 def validate_form_response(json):
-    required_fields = ['FormID', 'FormResponseID', 'PatientID', 'FormFillerID', 'Version', 'Answers']
+    required_fields = ['FormID', 'PatientID', 'FormFillerID', 'Version', 'Answers']
     for field in required_fields:
         if field not in json:
             abort(406)

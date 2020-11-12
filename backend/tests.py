@@ -42,8 +42,8 @@ class TestFormEndpoints(TestCase):
         response = self.client.get("/forms/search?FormName={FormName}".format(FormName=FormName))
         self.assertEquals(response.status_code, 200)
 
-        self.assertEquals(response.json[0]['FormID'], '-2')
-        self.assertEquals(response.json[0]['Version'], '1.1')
+        self.assertEquals(response.json['items'][0]['FormID'], '-2')
+        self.assertEquals(response.json['items'][0]['Version'], '1.1')
 
     def test_regex_search_form_name(self):
         FormName = 'Test'
@@ -59,7 +59,7 @@ class TestFormEndpoints(TestCase):
         response = self.client.get("/forms/search?FormName={FormName}".format(FormName=FormName))
         self.assertEquals(response.status_code, 200)
 
-        self.assertEquals(len(response.json), 0)
+        self.assertEquals(response.json['total'], 0)
 
     def test_update_form_name(self):
         FormName = 'Test2'
@@ -67,7 +67,7 @@ class TestFormEndpoints(TestCase):
 
         response = self.client.get("/forms/search?FormName={FormName}".format(FormName=FormName))
 
-        self.assertEquals(response.json[0]['Version'], '1.1')
+        self.assertEquals(response.json['items'][0]['Version'], '1.1')
 
         # Update form name
         response = self.client.patch("/forms", data=json.dumps({'FormName': newFormName, 'FormID': '-2', 'Version': '1.1'}), content_type='application/json')
@@ -75,7 +75,7 @@ class TestFormEndpoints(TestCase):
 
         response = self.client.get("/forms/search?FormName={FormName}".format(FormName=newFormName))
 
-        self.assertEquals(response.json[0]['Version'], '1.1')
+        self.assertEquals(response.json['items'][0]['Version'], '1.1')
 
         # Revert form name
         response = self.client.patch("/forms", data=json.dumps({'FormName': FormName, 'FormID': '-2', 'Version': '1.1'}), content_type='application/json')
@@ -148,23 +148,23 @@ class TestResponseFormEndpoints(TestCase):
         response = self.client.get("/form-responses/search?FormName={FormName}".format(FormName=FormName))
         self.assertEquals(response.status_code, 200)
 
-        self.assertEquals(response.json[1]['FormID'], '-3')
-        self.assertEquals(response.json[1]['Version'], '2.0')
-        self.assertEquals(response.json[1]['FormResponseID'], '-3')
-        self.assertEquals(len(response.json), 2)
+        # Only 1 result because different form version numbers
+        self.assertEquals(response.json['items'][0]['form']['FormID'], '-3')
+        self.assertEquals(response.json['items'][0]['form']['Version'], '1.0')
+        self.assertEquals(response.json['items'][0]['form-response']['FormResponseID'], '-2')
+        self.assertEquals(response.json['total'], 1)
 
     def test_get_search_misc(self):
-        FormID = '-3'
-        FormResponseID = '-3'
+        FormResponseID = '-2'
         DiagnosticProcedureID = '-4'
 
-        response = self.client.get("/form-responses/search?FormResponseID={FormResponseID}&DiagnosticProcedureID={DiagnosticProcedureID}".format(FormID=FormID, FormResponseID=FormResponseID, DiagnosticProcedureID=DiagnosticProcedureID))
+        response = self.client.get("/form-responses/search?FormResponseID={FormResponseID}&DiagnosticProcedureID={DiagnosticProcedureID}".format(FormResponseID=FormResponseID, DiagnosticProcedureID=DiagnosticProcedureID))
         self.assertEquals(response.status_code, 200)
 
-        self.assertEquals(response.json[0]['FormID'], '-3')
-        self.assertEquals(response.json[0]['Version'], '2.0')
-        self.assertEquals(response.json[0]['FormResponseID'], '-3')
-        self.assertEquals(len(response.json), 1)
+        self.assertEquals(response.json['items'][0]['form']['FormID'], '-3')
+        self.assertEquals(response.json['items'][0]['form']['Version'], '1.0')
+        self.assertEquals(response.json['items'][0]['form-response']['FormResponseID'], '-2')
+        self.assertEquals(response.json['total'], 1)
 
     def test_get_search_missing(self):
         FormID = '-3'
@@ -183,7 +183,7 @@ class TestResponseFormEndpoints(TestCase):
 
         response = self.client.get("/form-responses/search?FormResponseID={FormResponseID}".format(FormID=FormID, FormResponseID=FormResponseID))
 
-        self.assertEquals(response.json[0]['Version'], Version)
+        self.assertEquals(response.json['items'][0]['Version'], Version)
 
         # Update form name
         response = self.client.patch("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID), data=json.dumps({'FormResponseID': FormResponseID, 'FormID': FormID, 'Version': newVersion, 'DiagnosticProcedureID': '-5', 'PatientID': '-6', 'FormFillerID': '-7', 'Answers': {}}), content_type='application/json')
@@ -191,7 +191,7 @@ class TestResponseFormEndpoints(TestCase):
 
         response = self.client.get("/form-responses/search?FormResponseID={FormResponseID}".format(FormID=FormID, FormResponseID=FormResponseID))
 
-        self.assertEquals(response.json[0]['Version'], newVersion)
+        self.assertEquals(response.json['items'][0]['Version'], newVersion)
 
         # Revert form name
         response = self.client.patch("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID), data=json.dumps({'FormResponseID': FormResponseID, 'FormID': FormID, 'Version': Version, 'DiagnosticProcedureID': '-5', 'PatientID': '-6', 'FormFillerID': '-7', 'Answers': {}}), content_type='application/json')
@@ -201,13 +201,20 @@ class TestResponseFormEndpoints(TestCase):
         FormResponseID = '-2'
 
         response = self.client.delete("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID))
+        self.assertEquals(response.status_code, 404)  # Could not find a draft
+
+        # Create draft
+        response = self.client.post("/form-responses", data=json.dumps({'FormID': '-3', 'Version': '1.0', 'DiagnosticProcedureID': '-4', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}, 'IsDraft': 'true'}), content_type='application/json')
         self.assertEquals(response.status_code, 201)
 
-        response = self.client.get("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID))
-        self.assertEquals(response.status_code, 404)
+        draft_response_id = '-1'  # max responseid + 1
 
-        response = self.client.post("/form-responses", data=json.dumps({'FormResponseID': FormResponseID, 'FormID': '-3', 'Version': '1.0', 'DiagnosticProcedureID': '-4', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}}), content_type='application/json')
-        self.assertEquals(response.status_code, 201)
+        response = self.client.delete("/form-responses/{FormResponseID}".format(FormResponseID=draft_response_id))
+        self.assertEquals(response.status_code, 201)  # Delete response
+
+        response = self.client.get("/form-responses/{FormResponseID}".format(FormResponseID=draft_response_id))
+        self.assertEquals(response.status_code, 404)  # Cant find response
+
 
     def test_delete_response_form_missing_version(self):
         FormResponseID = '-1'
@@ -216,17 +223,17 @@ class TestResponseFormEndpoints(TestCase):
         self.assertEquals(response.status_code, 404)
 
     def test_create_response_form(self):
-        FormResponseID = '-5'
+        FormResponseID = '-1'
         Version = '1.0'
+        FormID = '-2'
+        PatientID = '-5'
+        FormFillerID = '-7'
 
         response = self.client.get("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID))
         self.assertEquals(response.status_code, 404)
 
-        response = self.client.post("/form-responses", data=json.dumps({'FormResponseID': "{FormResponseID}".format(FormResponseID=FormResponseID), 'FormID': '-2', 'Version': "{Version}".format(Version=Version), 'DiagnosticProcedureID': '-4', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}}), content_type='application/json')
+        response = self.client.post("/form-responses", data=json.dumps({'FormID': FormID, 'Version': Version, 'DiagnosticProcedureID': '-4', 'PatientID': PatientID, 'FormFillerID': FormFillerID, 'Answers': {}, 'IsDraft': 'true'}), content_type='application/json')
         self.assertEquals(response.status_code, 201)
-
-        response = self.client.get("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID))
-        self.assertEquals(response.status_code, 200)
 
         response = self.client.delete("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID))
         self.assertEquals(response.status_code, 201)
