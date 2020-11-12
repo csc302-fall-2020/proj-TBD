@@ -399,7 +399,7 @@ def get_response(FormResponseID, remove_id=True, is_draft=None):
 
 
 def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft=False):
-    if IsDraft is True and FormFillerID is not None:
+    if IsDraft is True and FormFillerID is None:
         abort(406)  # Need to know which clinician to return drafts for
 
     parm_query = {}
@@ -422,7 +422,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
     form_lst = query_form(parm_query, restrict_columns=METADATA_COLUMNS, min_form_lst_len=-1, error_no_params=False, get_latest=False)
 
     if len(form_lst) == 0:
-        return []
+        return {'items': [], 'total': 0}
     else:
         cross_form_response_lst = []
 
@@ -529,7 +529,7 @@ def validate_form_response(json):
     query_form(parm_dict, min_form_lst_len=1, get_latest=False)
 
 
-@APP.route('/home/{FormFillerID}', methods=['GET'])
+@APP.route('/home/<FormFillerID>', methods=['GET'])
 def get_home_data(FormFillerID):
     popular_limit = 5
 
@@ -555,6 +555,9 @@ def get_home_data(FormFillerID):
 
     for form_id in form_id_by_popularity:
         form_meta_by_popularity.append(query_form({'FormID': form_id}, max_form_lst_len=1, restrict_columns=METADATA_COLUMNS)[0])
+
+    if len(form_meta_by_popularity) < popular_limit:
+        form_meta_by_popularity += query_form({}, restrict_columns=METADATA_COLUMNS, error_no_params=False)[:(popular_limit - len(form_meta_by_popularity))]
 
     return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 

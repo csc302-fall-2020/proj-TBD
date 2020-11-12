@@ -112,3 +112,8 @@ export interface SDCFormListResponse {
     items: SDCFormMetaData[];
     total: number;
 }
+
+export interface HomePageResponse {
+    drafts: { items: { form: SDCFormMetaData; 'form-response': SDCFormResponse }, total: number };
+    'most-used': SDCFormMetaData[];
+}
