@@ -4,6 +4,8 @@ import axios from 'axios';
 export interface FormRepository {
     getForm(formId: string): Promise<SDCForm>;
 
+    updateResponse(response: SDCFormResponseForSubmission): Promise<boolean>;
+
     submitResponse(response: SDCFormResponseForSubmission): Promise<string>;
 }
 
@@ -120,6 +122,10 @@ class SampleFormRepository implements FormRepository {
         }
     }
 
+    updateResponse(response: SDCFormResponse): Promise<boolean> {
+        return Promise.resolve(true);
+    }
+
     submitResponse(response: SDCFormResponse): Promise<string> {
         return Promise.resolve('1');
     }
@@ -130,6 +136,12 @@ const formRepository: FormRepository = {
         const axiosResponse = await axios.post('/form-responses', response);
 
         return axiosResponse.data as string;
+    },
+
+    async updateResponse(response: SDCFormResponse): Promise<boolean> {
+        const axiosResponse = await axios.patch(`/form-responses/${response.FormResponseID}`, response);
+
+        return axiosResponse.data;
     },
 
     async getForm(formId: string): Promise<SDCForm> {

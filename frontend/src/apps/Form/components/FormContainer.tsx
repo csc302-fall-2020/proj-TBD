@@ -129,18 +129,27 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                 let submittedResponse: SDCFormResponse | undefined;
                 try {
                     const response = _constructFormResponse(sdcForm, values, isDraft, sdcResponse);
-                    const responseID = await formRepository.submitResponse(response);
+                    if (response.FormResponseID) {
+                        await formRepository.updateResponse(response);
+
+                        submittedResponse = {
+                            ...response,
+                            FormResponseID: response.FormResponseID
+                        };
+                    } else {
+                        const responseID = await formRepository.submitResponse(response);
+
+                        submittedResponse = {
+                            ...response,
+                            FormResponseID: responseID
+                        };
+                    }
 
                     if (response.IsDraft) {
                         message.success('Draft is saved!');
                     } else {
                         message.success('Submit successfully!');
                     }
-
-                    submittedResponse = {
-                        ...response,
-                        FormResponseID: responseID
-                    };
                 } catch (e) {
                     message.error(e.message);
                 } finally {

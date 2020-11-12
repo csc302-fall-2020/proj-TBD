@@ -509,7 +509,7 @@ def create_form_response():
 
     max_response_id = FORM_RESPONSE_TABLE.find_one(sort=[('FormResponseID', pymongo.DESCENDING)])['FormResponseID']
 
-    FormResponseID = str(int(max_response_id) + 1)
+    FormResponseID = json['FormResponseID'] if 'FormResponseID' in json else str(int(max_response_id) + 1)
     json['FormResponseID'] = FormResponseID
 
     FORM_RESPONSE_TABLE.insert_one(json)
