@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { SDCFormMetaData } from 'utils/sdcTypes';
+import { SDCFormListResponse, FormName } from 'utils/sdcTypes';
 
-export const getFormMetaDataList = async ({}): Promise<Array<SDCFormMetaData>> => {
-    const response = await axios.get('/forms');
+export const searchMetaDataList = async (FormName: FormName, offset: number): Promise<SDCFormListResponse> => {
+    const response = await axios.get('/forms/search', { params: { FormName, offset } });
     return response.data;
 };
