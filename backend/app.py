@@ -489,13 +489,28 @@ def search_response():
 @APP.route('/form-responses', methods=['POST'])
 def create_form_response():
     # Can only upload JSON
-    id = ObjectId()
     json = request.json
-    json['FormResponseID'] = id
-    json['_id'] = id
+    validate_form_response(json)
+
+    FormResponseID = ObjectId() if json['FormResponseID'] is None else ObjectId(json['FormResponseID'])
+    json['FormResponseID'] = str(FormResponseID)
+    json['_id'] = FormResponseID
 
     FORM_RESPONSE_TABLE.insert_one(json)
-    return str(id), 201
+    return str(FormResponseID), 201
+
+
+def validate_form_response(json):
+    required_fields = ['FormID', 'FormResponseID', 'PatientID', 'FormFillerID', 'Version', 'Answers']
+    for field in required_fields:
+        if field not in json:
+            abort(406)
+        if field != 'FormResponseID' and (json[field] is None or json[field] == ""):
+            abort(406)
+
+    # Get form and check if form exists, if it does check if the version exists
+    parm_dict = {'FormID': json['FormID'], 'Version': json['Version']}
+    query_form(parm_dict, min_form_lst_len=1, get_latest=False)
 
 
 if __name__ == '__main__':
