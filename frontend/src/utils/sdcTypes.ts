@@ -108,13 +108,22 @@ export interface SDCFormMetaData {
     Version: Version;
 }
 
+export interface SDCFormResponseMetaData {
+    FormResponseID: FormResponseID;
+    FormID: FormID;
+    PatientID: PatientID;
+    FormFillerID: FormFillerID;
+    IsDraft: boolean;
+    Version: string;
+}
+
 export interface SDCFormListResponse {
     items: SDCFormMetaData[];
     total: number;
 }
 
 export interface SDCFormResponseListResponse {
-    items: { form: SDCFormMetaData; 'form-response': SDCFormResponse }[];
+    items: { form: SDCFormMetaData; 'form-response': SDCFormResponseMetaData }[];
     total: number;
 }
 

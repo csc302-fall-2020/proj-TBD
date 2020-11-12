@@ -3,6 +3,8 @@ import { useParams, NavLink } from 'react-router-dom';
 import { Alert, Spin, Button } from 'antd';
 import styled from 'styled-components';
 
+import DraftTable from './DraftTable';
+
 import FormCard from 'common/FormCard/FormCard';
 
 import { getHomeData } from '../repository';
@@ -64,23 +66,26 @@ const Home: React.FC<Props> = () => {
     }, []);
 
     const renderForms = (forms: SDCFormMetaData[]) => (
-            <Section>
-                <FormsHeader>
-                    <h2>Start a new form</h2>
-                    <NavLink to={`/${clinicianID}/forms`}>
-                        <Button type="link">more forms</Button>
-                    </NavLink>
-                </FormsHeader>
-                <FormsWrapper>
-                    {forms.map(metaData => {
-                        return <FormCard metaData={metaData} hasActions={false} />;
-                    })}
-                </FormsWrapper>
-            </Section>
+        <Section>
+            <FormsHeader>
+                <h2>Start a new form</h2>
+                <NavLink to={`/${clinicianID}/forms`}>
+                    <Button type="link">more forms</Button>
+                </NavLink>
+            </FormsHeader>
+            <FormsWrapper>
+                {forms.map(metaData => {
+                    return <FormCard metaData={metaData} hasActions={false} />;
+                })}
+            </FormsWrapper>
+        </Section>
     );
 
     const renderDrafts = (drafts: SDCFormResponseListResponse) => (
-        <Section><h2>My Drafts</h2></Section>
+        <Section>
+            <h2>My Drafts</h2>
+            <DraftTable drafts={drafts} />
+        </Section>
     );
 
     if (error) {
@@ -88,7 +93,12 @@ const Home: React.FC<Props> = () => {
     }
 
     if (data) {
-        return <div data-testid="home-page">{renderForms(data['most-used'])}{renderDrafts(data.drafts)}</div>;
+        return (
+            <div data-testid="home-page">
+                {renderForms(data['most-used'])}
+                {renderDrafts(data.drafts)}
+            </div>
+        );
     }
 
     return (

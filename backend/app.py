@@ -405,13 +405,12 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
     parm_query = {}
 
     parm_query['FormFillerID'] = FormFillerID
-    parm_query['DiagnosticProcedureID'] = DiagnosticProcedureID
     parm_query['PatientID'] = PatientID
     parm_query['FormResponseID'] = FormResponseID
 
     search_query = get_search_query(parm_query, error_no_params=False)
 
-    match_forms = FORM_RESPONSE_TABLE.find(search_query)
+    match_forms = FORM_RESPONSE_TABLE.find(search_query, {'FormResponseID', 'FormID', 'PatientID', 'FormFillerID', 'IsDraft', 'Version'})
 
     form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID', is_draft=IsDraft)
 
@@ -419,6 +418,7 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
     parm_query = {}
     parm_query['FormName'] = FormName
+    parm_query['DiagnosticProcedureID'] = DiagnosticProcedureID
     form_lst = query_form(parm_query, restrict_columns=METADATA_COLUMNS, min_form_lst_len=-1, error_no_params=False, get_latest=False)
 
     if len(form_lst) == 0:
