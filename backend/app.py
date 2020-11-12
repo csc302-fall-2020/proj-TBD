@@ -3,18 +3,14 @@ import os
 import re
 import xml.etree.ElementTree as ET
 import json
+import pymongo
 from bson.objectid import ObjectId
 
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
-os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
-os.environ['MONGODB_USERNAME'] = 'admin'
-os.environ['MONGODB_PASSWORD'] = 'admin'
-os.environ['MONGODB_DB'] = 'SDC'
-
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -88,11 +84,11 @@ def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_la
         remove_id_col(form_lst)
 
     # When we're processing a list of SDCForm objects, there is no IsDraft property
-    if is_draft == 'true':
-        form_lst = [x for x in form_lst if 'IsDraft' in x and x['IsDraft'] == 'true']
+    if is_draft is True:
+        form_lst = [x for x in form_lst if 'IsDraft' in x and x['IsDraft'] is True]
 
-    else:
-        form_lst = [x for x in form_lst if 'IsDraft' not in x or x['IsDraft'] == 'false']
+    elif is_draft is False:
+        form_lst = [x for x in form_lst if 'IsDraft' not in x or x['IsDraft'] is False]
 
     if get_latest:
         form_lst = get_latest_forms(form_lst, key)
@@ -401,8 +397,8 @@ def get_response(FormResponseID, remove_id=True, is_draft=None):
     return form_response
 
 
-def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft='false'):
-    if IsDraft == 'true' and FormFillerID is not None:
+def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft=False):
+    if IsDraft is True and FormFillerID is not None:
         abort(406)  # Need to know which clinician to return drafts for
 
     parm_query = {}
@@ -442,9 +438,9 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
 
 def delete_response(FormResponseID):
-    form_response = get_response(FormResponseID, remove_id=False, is_draft='true')
+    form_response = get_response(FormResponseID, remove_id=False, is_draft=True)
 
-    if 'IsDraft' not in form_response or form_response['IsDraft'] != 'true':
+    if 'IsDraft' not in form_response or form_response['IsDraft'] is False:
         abort(405)  # Form response must be a draft to delete
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response['_id'])})
@@ -461,7 +457,7 @@ def update_form_response(FormResponseID):
 
     query_response = FORM_RESPONSE_TABLE.find(search_query)
 
-    form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False)
+    form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False, is_draft=True)
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
 
@@ -511,13 +507,13 @@ def create_form_response():
     json = request.json
     validate_form_response(json)
 
-    max_response_id = FORM_RESPONSE_TABLE.find_one(sort=[('FormResponseID', 1)])['FormResponseID']
+    max_response_id = FORM_RESPONSE_TABLE.find_one(sort=[('FormResponseID', pymongo.DESCENDING)])['FormResponseID']
 
     FormResponseID = str(int(max_response_id) + 1)
     json['FormResponseID'] = FormResponseID
 
     FORM_RESPONSE_TABLE.insert_one(json)
-    return str(FormResponseID), 201
+    return FormResponseID, 201
 
 
 def validate_form_response(json):
@@ -528,17 +524,15 @@ def validate_form_response(json):
         if field != 'FormResponseID' and (json[field] is None or json[field] == ""):
             abort(406)
 
-    # Get form and check if form exists, if it does check if the version exists
     parm_dict = {'FormID': json['FormID'], 'Version': json['Version']}
     query_form(parm_dict, min_form_lst_len=1, get_latest=False)
 
 
 @APP.route('/home/{FormFillerID}', methods=['GET'])
 def get_home_data(FormFillerID):
-    IsDraft = 'true'
     popular_limit = 5
 
-    form_response = query_responses(FormFillerID=FormFillerID, IsDraft=IsDraft)
+    form_response = query_responses(FormFillerID=FormFillerID, IsDraft=True)
 
     all_clinician_forms = query_responses(FormFillerID=FormFillerID)['items']
 
