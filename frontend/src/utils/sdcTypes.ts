@@ -113,7 +113,12 @@ export interface SDCFormListResponse {
     total: number;
 }
 
+export interface SDCFormResponseListResponse {
+    items: { form: SDCFormMetaData; 'form-response': SDCFormResponse }[];
+    total: number;
+}
+
 export interface HomePageResponse {
-    drafts: { items: { form: SDCFormMetaData; 'form-response': SDCFormResponse }, total: number };
+    drafts: SDCFormResponseListResponse;
     'most-used': SDCFormMetaData[];
 }

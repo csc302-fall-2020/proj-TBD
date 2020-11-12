@@ -531,7 +531,7 @@ def validate_form_response(json):
 
 @APP.route('/home/<FormFillerID>', methods=['GET'])
 def get_home_data(FormFillerID):
-    popular_limit = 5
+    popular_limit = 4
 
     form_response = query_responses(FormFillerID=FormFillerID, IsDraft=True)
 
