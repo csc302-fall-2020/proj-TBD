@@ -77,12 +77,14 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
                 <FormContainer
                     {...response}
                     disabled={!enabled}
-                    onSubmit={(newResponse) =>
-                        setResponse({
+                    onSubmit={(newResponse) => {
+                        const withForm = {
                             form: response.form,
                             response: newResponse
-                        })
-                    }
+                        };
+                        setResponse(withForm);
+                        onReceiveResponse?.(withForm)
+                    }}
                 />
             </>
         );

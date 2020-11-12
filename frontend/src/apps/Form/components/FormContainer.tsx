@@ -184,7 +184,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
         });
     }
 
-    if (responseID) {
+    if (responseID && responseID !== sdcResponse?.FormResponseID) {
         return <Redirect to={`/${getCurrentUser().getID()}/responses/${responseID}`} />;
     }
 
@@ -201,8 +201,16 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                     if (error.errorFields.find((field) => isEqual(field.name, [PATIENT_ID_INPUT_NAME]))) {
                         return;
                     }
+
+                    const formValues = form.getFieldsValue();
+
                     // Otherwise we submit the draft response
-                    doSubmit(form.getFieldsValue());
+                    doSubmit(formValues);
+
+                    // We need to clear question fields of any errors they may have
+                    // (which are ignored b/c it's a draft submit)
+                    form.resetFields();
+                    form.setFields(Object.keys(formValues).map((name) => ({ name, value: formValues[name] })));
                 }
             }}
         >
