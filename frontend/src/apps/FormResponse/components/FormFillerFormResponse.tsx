@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { Breadcrumb, Button, Col, Row, Space, Tooltip } from 'antd';
 import { CloseOutlined, EditOutlined, LinkOutlined, PlusOutlined } from '@ant-design/icons';
@@ -22,6 +22,16 @@ const FormFillerFormResponse: React.FC = () => {
     const [didCopyLink, setDidCopyLink] = useState(false);
     const [response, setResponse] = useState<FormWithResponse | null>(null);
     const [enabled, setEnabled] = useState(false);
+
+    const onReceiveResponse = useCallback((newResponse) => {
+        setResponse((response) => {
+            if (response !== newResponse) {
+                setEnabled(false);
+            }
+
+            return newResponse;
+        });
+    }, []);
 
     return (
         <>
@@ -50,17 +60,22 @@ const FormFillerFormResponse: React.FC = () => {
                                 </>
                             ) : (
                                 <>
-                                    <Tooltip key={'make-revision'} title={'Make Revision'}>
-                                        <Button
-                                            type="ghost"
-                                            shape="circle"
-                                            icon={<EditOutlined />}
-                                            onClick={() => setEnabled(true)}
-                                        />
+                                    {response.response.IsDraft && (
+                                        <Tooltip key={'make-revision'} title={'Make Revision'}>
+                                            <Button
+                                                type="ghost"
+                                                shape="circle"
+                                                icon={<EditOutlined />}
+                                                onClick={() => setEnabled(true)}
+                                            />
+                                        </Tooltip>
+                                    )}
+                                    <Tooltip title={`New ${response.form.FormName}`}>
+                                        <NavLink to={`/${clinicianID}/forms/${response.form.FormID}`}>
+                                            <Button type="ghost" shape="circle" icon={<PlusOutlined />} />
+                                        </NavLink>
                                     </Tooltip>
-                                    <NavLink to={`/${clinicianID}/forms/${response.form.FormID}`}>
-                                        <Button type="ghost" shape="circle" icon={<PlusOutlined />} />
-                                    </NavLink>
+
                                     <Tooltip
                                         title={didCopyLink ? 'Copied!' : 'Share link'}
                                         onVisibleChange={(visible) => visible && setDidCopyLink(false)}
@@ -78,7 +93,7 @@ const FormFillerFormResponse: React.FC = () => {
                     </Col>
                 </Row>
             )}
-            <FormResponse responseID={responseID} onReceiveResponse={setResponse} enabled={enabled} />
+            <FormResponse responseID={responseID} onReceiveResponse={onReceiveResponse} enabled={enabled} />
         </>
     );
 };
