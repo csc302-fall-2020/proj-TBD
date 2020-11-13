@@ -8,6 +8,8 @@ export type FormResponseWithForm = {
 
 interface FormResponseRepository {
     getResponse(responseID: string): Promise<FormResponseWithForm>;
+
+    deleteDraftResponse(responseID: string): Promise<boolean>;
 }
 
 const formResponseRepository: FormResponseRepository = {
@@ -18,7 +20,7 @@ const formResponseRepository: FormResponseRepository = {
 
         const result = {
             form: data.form,
-            response: data['form-response'],
+            response: data['form-response']
         };
 
         if (!result.form || !result.response) {
@@ -27,6 +29,11 @@ const formResponseRepository: FormResponseRepository = {
 
         return result;
     },
+    async deleteDraftResponse(responseID: string): Promise<boolean> {
+        const response = await axios.delete(`/form-responses/${responseID}`);
+
+        return response.data.success as boolean;
+    }
 };
 
 export default formResponseRepository;
