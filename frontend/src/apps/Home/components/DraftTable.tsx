@@ -4,15 +4,22 @@ import { Table } from 'antd';
 
 import { SDCFormResponseListResponse } from 'utils/sdcTypes';
 
+const _renderField = (text: string) => {
+    return {
+        props: { style: { cursor: 'pointer' } },
+        children: <div>{text}</div>
+    };
+};
+
 interface Props {
     drafts: SDCFormResponseListResponse;
 }
 
 const columns = [
-    { title: 'Patient', dataIndex: 'patient', key: 'patient' },
-    { title: 'Form', dataIndex: 'form', key: 'form' },
-    { title: 'Procedure', dataIndex: 'procedure', key: 'procedure' },
-    { title: 'Date', dataIndex: 'date', key: 'date' }
+    { title: 'Patient', dataIndex: 'patient', key: 'patient', render: _renderField },
+    { title: 'Form', dataIndex: 'form', key: 'form', render: _renderField },
+    { title: 'Procedure', dataIndex: 'procedure', key: 'procedure', render: _renderField },
+    { title: 'Date', dataIndex: 'date', key: 'date', render: _renderField }
 ];
 
 const DraftTable: React.FC<Props> = ({ drafts }) => {

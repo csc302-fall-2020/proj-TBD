@@ -40,6 +40,29 @@ const FormsWrapper = styled.div`
     scrollbar-width: none; /* Firefox */
 `;
 
+const _renderForms = (clinicianID: string, forms: SDCFormMetaData[]) => (
+        <Section>
+            <FormsHeader>
+                <h2>Start a New Form</h2>
+                <NavLink to={`/${clinicianID}/forms`}>
+                    <Button type="link">more forms</Button>
+                </NavLink>
+            </FormsHeader>
+            <FormsWrapper>
+                {forms.map(metaData => {
+                    return <FormCard metaData={metaData} hasActions={false} />;
+                })}
+            </FormsWrapper>
+        </Section>
+    );
+
+const _renderDrafts = (drafts: SDCFormResponseListResponse) => (
+    <Section>
+        <h2>My Drafts</h2>
+        <DraftTable drafts={drafts} />
+    </Section>
+);
+
 export type Props = {};
 
 type Params = { clinicianID: string };
@@ -65,29 +88,6 @@ const Home: React.FC<Props> = () => {
         fetchHomeData();
     }, []);
 
-    const renderForms = (forms: SDCFormMetaData[]) => (
-        <Section>
-            <FormsHeader>
-                <h2>Start a New Form</h2>
-                <NavLink to={`/${clinicianID}/forms`}>
-                    <Button type="link">more forms</Button>
-                </NavLink>
-            </FormsHeader>
-            <FormsWrapper>
-                {forms.map(metaData => {
-                    return <FormCard metaData={metaData} hasActions={false} />;
-                })}
-            </FormsWrapper>
-        </Section>
-    );
-
-    const renderDrafts = (drafts: SDCFormResponseListResponse) => (
-        <Section>
-            <h2>My Drafts</h2>
-            <DraftTable drafts={drafts} />
-        </Section>
-    );
-
     if (error) {
         return <Alert showIcon type={'error'} message={error} />;
     }
@@ -95,8 +95,8 @@ const Home: React.FC<Props> = () => {
     if (data) {
         return (
             <div data-testid="home-page">
-                {renderForms(data['most-used'])}
-                {renderDrafts(data.drafts)}
+                {_renderForms(clinicianID, data['most-used'])}
+                {_renderDrafts(data.drafts)}
             </div>
         );
     }
