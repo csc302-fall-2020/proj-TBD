@@ -16,6 +16,7 @@ CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
 FORM_TABLE = DB.forms
 FORM_RESPONSE_TABLE = DB.form_responses
+CLINICIAN_TABLE = DB.clinicians
 
 DEFAULT_LIMIT = 20
 METADATA_COLUMNS = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
@@ -561,6 +562,14 @@ def get_home_data(FormFillerID):
 
     return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
+@APP.route('/clinicians/<ClinicianID>', methods=['GET'])
+def get_clinician(ClinicianID):
+    clinician = CLINICIAN_TABLE.find_one({'FormFillerID': ClinicianID})
+    if clinician is None:
+        abort(404)
+    else:
+        clinician.pop('_id')
+        return jsonify(clinician), 200
 
 if __name__ == '__main__':
     APP.run(debug=True)

@@ -259,6 +259,24 @@ paths:
       responses:
         '201':
           $ref: '#/components/responses/201'
+  
+  # =============== Clinicians
+  /clinicians/{ClinicianID}:
+    get:
+      tags:
+        - Clinicians
+      summary: Get information about a given clinician
+      parameters:
+        - name: ClinicianID
+          required: true
+          in: path
+          schema:
+            $ref: '#/components/schemas/FormFillerID'
+      responses:
+        '200':
+          $ref: '#/components/responses/SDCClinician'
+        '404':
+          description: 'Clinician with the given ID was not found'
 
 
 components:
@@ -432,7 +450,7 @@ components:
             - $ref: '#/components/schemas/SDCMultipleChoiceAnswer'
             - $ref: '#/components/schemas/SDCTrueFalseAnswer'
           discriminator:
-            propertyName: AnswerType
+            propertyName: AnswerType      
     SDCFormMetaData:
         type: object
         description: "An object containing MetaData to a SDCForm"
@@ -445,6 +463,18 @@ components:
             $ref: '#/components/schemas/FormName'
           Version:
             $ref: '#/components/schemas/Version'
+    SDCClinician:
+      type: object
+      description: "An object containing information about a clinician (Form filler)"
+      properties:
+        FormFillerID:
+          $ref: '#/components/schemas/FormFillerID'
+        FirstName:
+          type: string
+          description: 'The clinicians first name'
+        LastName:
+          type: string
+          description: 'The clinicians last name'
     SDCFormResponseMetaData:
       type: object
       description: "An object that contains the response to a SDCForm"
@@ -547,6 +577,12 @@ components:
               total:
                 description: "The total number of items available to return"
                 type: integer
+    SDCClinician:
+      description: "A clinician"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SDCClinician'
     HomePageResponse:
       description: "A Form Fillers drafts and most used forms"
       content:
@@ -576,5 +612,3 @@ components:
                   total:
                     description: "The total number of items available to return"
                     type: integer
-
-
