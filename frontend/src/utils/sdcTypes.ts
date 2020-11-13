@@ -114,11 +114,11 @@ export interface SDCFormListResponse {
 }
 
 export interface SDCFormResponseParams {
-    FormName:FormName;
-    FormFillerID: FormFillerID;
-    DiagnosticProcedureID: DiagnosticProcedureID;  
-    PatientID: PatientID;
-    FormResponseID: FormResponseID;
+    FormName:FormName | null;
+    FormFillerID: FormFillerID | null;
+    DiagnosticProcedureID: DiagnosticProcedureID | null;  
+    PatientID: PatientID | null;
+    FormResponseID: FormResponseID | null;
 }
 
 export interface SDCFormResponseListResponse { 
