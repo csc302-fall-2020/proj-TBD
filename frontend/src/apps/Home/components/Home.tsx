@@ -68,7 +68,7 @@ const Home: React.FC<Props> = () => {
     const renderForms = (forms: SDCFormMetaData[]) => (
         <Section>
             <FormsHeader>
-                <h2>Start a new form</h2>
+                <h2>Start a New Form</h2>
                 <NavLink to={`/${clinicianID}/forms`}>
                     <Button type="link">more forms</Button>
                 </NavLink>
