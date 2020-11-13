@@ -5,6 +5,7 @@
         "FormFillerID": "423",
         "FormResponseID": "322",
         "Version": "1.0",
+        "IsDraft": false,
         "Answers": {
             "1": {
                 "QuestionID": "1",
@@ -19,6 +20,7 @@
         "FormFillerID": "423",
         "FormResponseID": "1",
         "Version": "1",
+        "IsDraft": false,
         "Answers": {
             "1": {
                 "QuestionID": "1",

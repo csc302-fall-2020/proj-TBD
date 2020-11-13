@@ -79,6 +79,26 @@ info:
   version: 1.0.0
 paths:
 
+  # =============== HOME
+  /home/{FormFillerID}:
+    get:
+      tags:
+        - Home
+      summary: Get a Form Fillers drafts and most used forms
+
+      parameters:
+        - in: path
+          name: FormFillerID
+          required: true
+          schema:
+            $ref: '#/components/schemas/FormFillerID'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/HomePageResponse'
+        '404':
+          $ref: '#/components/responses/404'
+
   # =============== FORMS
   /forms/{FormID}:
     get:
@@ -418,6 +438,9 @@ components:
           $ref: '#/components/schemas/FormFillerID'
         Version:
           $ref: '#/components/schemas/Version'
+        IsDraft:
+          type: boolean
+          description: "tells if the response is a draft"
         Answers:
           type: object
           additionalProperties:
@@ -427,10 +450,7 @@ components:
             - $ref: '#/components/schemas/SDCMultipleChoiceAnswer'
             - $ref: '#/components/schemas/SDCTrueFalseAnswer'
           discriminator:
-            propertyName: AnswerType
-        IsDraft:
-          type: boolean
-          description: "tells if the response is a draft"        
+            propertyName: AnswerType      
     SDCFormMetaData:
         type: object
         description: "An object containing MetaData to a SDCForm"
@@ -455,6 +475,23 @@ components:
         LastName:
           type: string
           description: 'The clinicians last name'
+    SDCFormResponseMetaData:
+      type: object
+      description: "An object that contains the response to a SDCForm"
+      properties:
+        FormResponseID:
+          $ref: '#/components/schemas/FormResponseID'
+        FormID:
+          $ref: '#/components/schemas/FormID'
+        PatientID:
+          $ref: '#/components/schemas/PatientID'
+        FormFillerID:
+          $ref: '#/components/schemas/FormFillerID'
+        Version:
+          $ref: '#/components/schemas/Version'
+        IsDraft:
+          type: boolean
+          description: "tells if the response is a draft"
 
 
 
@@ -515,7 +552,7 @@ components:
                     form:
                       $ref: '#/components/schemas/SDCFormMetaData'
                     form-response:
-                      $ref: '#/components/schemas/SDCFormResponse'
+                      $ref: '#/components/schemas/SDCFormResponseMetaData'
               total:
                 description: "The total number of items available to return"
                 type: integer
@@ -546,4 +583,32 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SDCClinician'
-
+    HomePageResponse:
+      description: "A Form Fillers drafts and most used forms"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              most-used:
+                description: "The Form Fillers most used forms"
+                type: array
+                items:
+                  $ref: '#/components/schemas/SDCFormMetaData'
+              drafts:
+                description: "The Form Fillers current drafts"
+                type: object
+                properties:
+                  items:
+                    description: "The requested data"
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        form:
+                          $ref: '#/components/schemas/SDCFormMetaData'
+                        form-response:
+                          $ref: '#/components/schemas/SDCFormResponseMetaData'
+                  total:
+                    description: "The total number of items available to return"
+                    type: integer

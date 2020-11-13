@@ -13,7 +13,7 @@ const StyledCard = styled(Card)`
     max-width: 210px;
     height: 150px;
     max-height: 150px;
-    margin: 20px;
+    margin: 15px;
 `;
 
 const InnerWrapper = styled.div`
@@ -34,9 +34,10 @@ const _getShareableFormURL = (FormID: FormID) => {
 
 interface Props {
     metaData: SDCFormMetaData;
+    hasActions?: boolean;
 }
 
-const FormCard: React.FC<Props> = ({ metaData }) => {
+const FormCard: React.FC<Props> = ({ metaData, hasActions = true }) => {
     const [didCopyLink, setDidCopyLink] = useState(false);
     const { FormID, FormName, Version } = metaData;
 
@@ -69,9 +70,11 @@ const FormCard: React.FC<Props> = ({ metaData }) => {
                         <Typography.Paragraph ellipsis={{ rows: 3 }}>{FormName}</Typography.Paragraph>
                         <Footer>
                             <Card.Meta description={`V ${Version}`} />
-                            <Dropdown overlay={renderMenu} trigger={['click']}>
-                                <EllipsisOutlined />
-                            </Dropdown>
+                            {hasActions && (
+                                <Dropdown overlay={renderMenu} trigger={['click']}>
+                                    <EllipsisOutlined />
+                                </Dropdown>
+                            )}
                         </Footer>
                     </InnerWrapper>
                 </StyledCard>
