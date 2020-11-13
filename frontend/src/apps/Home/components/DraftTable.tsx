@@ -25,7 +25,7 @@ const DraftTable: React.FC<Props> = ({ drafts }) => {
             patient: formResponse.PatientID,
             form: form.FormName,
             procedure: form.DiagnosticProcedureID,
-            date: '2020-01-01'
+            date: '2020-01-01' // TODO: Replace with correct date
         };
     });
 
