@@ -131,3 +131,9 @@ export interface HomePageResponse {
     drafts: SDCFormResponseListResponse;
     'most-used': SDCFormMetaData[];
 }
+
+export interface SDCClinician {
+    FormFillerID: string;
+    FirstName: string;
+    LastName: string;
+}

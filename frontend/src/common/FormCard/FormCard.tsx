@@ -6,7 +6,7 @@ import { EllipsisOutlined } from '@ant-design/icons';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { SDCFormMetaData, FormID } from 'utils/sdcTypes';
-import { getCurrentUser } from 'utils/user';
+import { useUser } from 'common/AuthProvider/AuthProvider';
 
 const StyledCard = styled(Card)`
     width: 210px;
@@ -40,6 +40,7 @@ interface Props {
 const FormCard: React.FC<Props> = ({ metaData, hasActions = true }) => {
     const [didCopyLink, setDidCopyLink] = useState(false);
     const { FormID, FormName, Version } = metaData;
+    const user = useUser();
 
     const handleCopyLink = (e: any) => {
         e.domEvent.stopPropagation();
@@ -64,7 +65,7 @@ const FormCard: React.FC<Props> = ({ metaData, hasActions = true }) => {
 
     return (
         <>
-            <NavLink to={`/${getCurrentUser().getID()}/forms/${FormID}`}>
+            <NavLink to={`/${user.FormFillerID}/forms/${FormID}`}>
                 <StyledCard hoverable bodyStyle={{ height: '100%' }}>
                     <InnerWrapper>
                         <Typography.Paragraph ellipsis={{ rows: 3 }}>{FormName}</Typography.Paragraph>
