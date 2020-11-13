@@ -12,7 +12,6 @@ import {
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { SDCFormResponse } from 'utils/sdcTypes';
 import FormResponse, { FormWithResponse } from './FormResponse';
-import { getCurrentUser } from 'utils/user';
 import formResponseRepository from '../repository';
 
 const { confirm } = Modal;
@@ -72,7 +71,7 @@ const FormFillerFormResponse: React.FC = () => {
     }, [responseID, setDeletingResponse]);
 
     if (didDeleteResponse) {
-        return <Redirect to={`/${getCurrentUser().getID()}/responses`} />;
+        return <Redirect to={`/${clinicianID}/responses`} />;
     }
 
     const disabled = isDeletingResponse;
