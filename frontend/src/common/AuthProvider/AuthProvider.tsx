@@ -66,7 +66,7 @@ const AuthProvider: React.FC = ({ children }) => {
 };
 
 export const withUser = <P extends UserProps>(Component: React.ComponentType<P>) =>
-    class WithUser extends React.Component<P> {
+    class WithUser extends React.Component<Exclude<P, 'user'>> {
         render() {
             return <UserContext.Consumer>{(user) => <Component {...this.props} user={user} />}</UserContext.Consumer>;
         }
