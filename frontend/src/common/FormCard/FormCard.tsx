@@ -6,14 +6,14 @@ import { EllipsisOutlined } from '@ant-design/icons';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { SDCFormMetaData, FormID } from 'utils/sdcTypes';
-import { getCurrentUser } from 'utils/user';
+import { useUser } from 'common/AuthProvider/AuthProvider';
 
 const StyledCard = styled(Card)`
     width: 210px;
     max-width: 210px;
     height: 150px;
     max-height: 150px;
-    margin: 20px;
+    margin: 15px;
 `;
 
 const InnerWrapper = styled.div`
@@ -34,11 +34,13 @@ const _getShareableFormURL = (FormID: FormID) => {
 
 interface Props {
     metaData: SDCFormMetaData;
+    hasActions?: boolean;
 }
 
-const FormCard: React.FC<Props> = ({ metaData }) => {
+const FormCard: React.FC<Props> = ({ metaData, hasActions = true }) => {
     const [didCopyLink, setDidCopyLink] = useState(false);
     const { FormID, FormName, Version } = metaData;
+    const user = useUser();
 
     const handleCopyLink = (e: any) => {
         e.domEvent.stopPropagation();
@@ -63,15 +65,17 @@ const FormCard: React.FC<Props> = ({ metaData }) => {
 
     return (
         <>
-            <NavLink to={`/${getCurrentUser().getID()}/forms/${FormID}`}>
+            <NavLink to={`/${user.FormFillerID}/forms/${FormID}`}>
                 <StyledCard hoverable bodyStyle={{ height: '100%' }}>
                     <InnerWrapper>
                         <Typography.Paragraph ellipsis={{ rows: 3 }}>{FormName}</Typography.Paragraph>
                         <Footer>
                             <Card.Meta description={`V ${Version}`} />
-                            <Dropdown overlay={renderMenu} trigger={['click']}>
-                                <EllipsisOutlined />
-                            </Dropdown>
+                            {hasActions && (
+                                <Dropdown overlay={renderMenu} trigger={['click']}>
+                                    <EllipsisOutlined />
+                                </Dropdown>
+                            )}
                         </Footer>
                     </InnerWrapper>
                 </StyledCard>

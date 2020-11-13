@@ -1,9 +1,9 @@
 import React from 'react';
 import { Menu, Typography } from 'antd';
-import { useParams, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { getCurrentUser, setCurrentUser } from 'utils/user';
+import { useUser } from './AuthProvider/AuthProvider';
 
 const { Text } = Typography;
 
@@ -35,27 +35,25 @@ const PageWrapper = styled.div`
 const InnerPageWrapper = styled.div`
     max-width: 1000px;
     width: 100%;
-    margin: 20px;
+    padding: 20px;
 `;
 
 type Tab = { tabName: string; route: string };
 type Props = { indexSelected: number; tabs: Array<Tab> };
-type ParamTypes = { clinicianID: string };
 
 const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
     const selectedRoute = tabs[indexSelected].route;
-    const { clinicianID } = useParams<ParamTypes>();
-    handleSetCurrentUser(clinicianID);
+    const user = useUser();
 
     return (
         <div data-testid="nav-bar">
             <Header>
                 <InnerWrapper>
-                    <Text>Hello, Dr.</Text>
+                    <Text>Hello, Dr. {user.LastName}</Text>
                     <StyledMenu mode="horizontal" selectedKeys={[selectedRoute]}>
                         {tabs.map(({ tabName, route }) => (
                             <Menu.Item key={route}>
-                                <NavLink to={`/${clinicianID}${route}`} data-testid={tabName}>
+                                <NavLink to={`/${user.FormFillerID}${route}`} data-testid={tabName}>
                                     {tabName}
                                 </NavLink>
                             </Menu.Item>
@@ -68,15 +66,6 @@ const NavBar: React.FC<Props> = ({ indexSelected, tabs, children }) => {
             </PageWrapper>
         </div>
     );
-};
-
-const handleSetCurrentUser = (clinicianID: string) => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-        if (currentUser.getID() !== clinicianID) currentUser.setID(clinicianID);
-    } else {
-        setCurrentUser(clinicianID);
-    }
 };
 
 export default NavBar;

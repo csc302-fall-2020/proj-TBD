@@ -1,4 +1,6 @@
 import { Col, Layout, Row, Button, Form, Input } from 'antd';
+import { Rule } from 'antd/lib/form';
+import { getUser } from 'common/AuthProvider/repository';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import styled from 'styled-components';
@@ -32,6 +34,28 @@ const StyledButton = styled(Button)`
     width: 100%;
 `;
 
+const clinicianRules: Rule[] = [
+    {
+        required: true,
+        pattern: /[0-9a-zA-Z]+/,
+        validateTrigger: '-',
+        validator: async (_, value, cb) => {
+            const id = typeof value === 'string' ? value : '';
+
+            if (id) {
+                try {
+                    await getUser(value as string);
+                } catch (e) {
+                    throw new Error(`Clinician '${value}' not found`);
+                }
+            } else {
+                throw new Error('Enter a Clinician ID');
+            }
+        },
+        whitespace: false
+    }
+];
+
 const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
@@ -57,7 +81,7 @@ const Login: React.FC = () => {
                         <h1>Welcome</h1>
                         <h3>Please enter your Clinician ID to continue</h3>
                         <StyledForm onFinish={onFinish} form={form}>
-                            <Form.Item name="clinicianID" rules={[{ required: true, pattern: /[0-9a-zA-Z]+/ }]}>
+                            <Form.Item name="clinicianID" rules={clinicianRules}>
                                 <Input placeholder="Clinician ID" />
                             </Form.Item>
                             <Form.Item>

@@ -1,14 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Col, Divider, Form as AntForm, Form, Input, Row, Space, Typography, Modal, message } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { SDCAnswer, SDCForm, SDCFormResponse, SDCFormResponseForSubmission, SDCQuestion } from 'utils/sdcTypes';
+import {
+    SDCAnswer,
+    SDCClinician,
+    SDCForm,
+    SDCFormResponse,
+    SDCFormResponseForSubmission,
+    SDCQuestion
+} from 'utils/sdcTypes';
 import FormSection from './FormSection';
 import styled from 'styled-components';
 import { PATIENT_ID_INPUT_NAME } from '../constants';
-import { getCurrentUser } from 'utils/user';
 import formRepository from '../repository';
 import { Redirect } from 'react-router-dom';
 import { isEqual } from 'lodash';
+import { useUser } from 'common/AuthProvider/AuthProvider';
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
@@ -34,6 +41,7 @@ const _getFormQuestions = (form: SDCForm): SDCQuestion[] => {
  * Given form values from the AntDesign Form (dict. of questionId: answer) construct a form response
  */
 const _constructFormResponse = (
+    user: SDCClinician,
     form: SDCForm,
     formValues: any,
     isDraft: boolean,
@@ -58,7 +66,7 @@ const _constructFormResponse = (
         FormResponseID: previousResponse?.FormResponseID,
         PatientID: formValues[PATIENT_ID_INPUT_NAME] as string,
         FormID: form.FormID,
-        FormFillerID: getCurrentUser().getID(),
+        FormFillerID: user.FormFillerID,
         Answers: answers,
         IsDraft: isDraft,
         Version: form.Version
@@ -113,6 +121,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
     const [isDraft, setDraft] = useState(false);
     const [loading, setLoading] = useState(false);
     const [responseID, setResponseID] = useState<string | null>(null);
+    const user = useUser();
 
     const disabled = loading || props.disabled;
 
@@ -129,7 +138,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
 
                 let submittedResponse: SDCFormResponse | undefined;
                 try {
-                    const response = _constructFormResponse(sdcForm, values, isDraft, sdcResponse);
+                    const response = _constructFormResponse(user, sdcForm, values, isDraft, sdcResponse);
                     if (response.FormResponseID) {
                         await formRepository.updateResponse(response);
 
@@ -165,7 +174,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
 
             _doSubmit();
         },
-        [isDraft, sdcForm, sdcResponse, onSubmit]
+        [isDraft, sdcForm, sdcResponse, onSubmit, user]
     );
 
     function showConfirm() {
@@ -185,7 +194,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
     }
 
     if (responseID && responseID !== sdcResponse?.FormResponseID) {
-        return <Redirect to={`/${getCurrentUser().getID()}/responses/${responseID}`} />;
+        return <Redirect to={`/${user.FormFillerID}/responses/${responseID}`} />;
     }
 
     return (

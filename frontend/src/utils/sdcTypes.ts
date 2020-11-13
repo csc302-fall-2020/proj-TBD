@@ -108,6 +108,15 @@ export interface SDCFormMetaData {
     Version: Version;
 }
 
+export interface SDCFormResponseMetaData {
+    FormResponseID: FormResponseID;
+    FormID: FormID;
+    PatientID: PatientID;
+    FormFillerID: FormFillerID;
+    IsDraft: boolean;
+    Version: string;
+}
+
 export interface SDCFormListResponse {
     items: SDCFormMetaData[];
     total: number;
@@ -134,4 +143,16 @@ export interface SDCFormResponseListMetaData {
     Date: string,
     FormFillerID:string,
     ResponseID:string
+}
+
+
+export interface HomePageResponse {
+    drafts: SDCFormResponseListResponse;
+    'most-used': SDCFormMetaData[];
+}
+
+export interface SDCClinician {
+    FormFillerID: string;
+    FirstName: string;
+    LastName: string;
 }

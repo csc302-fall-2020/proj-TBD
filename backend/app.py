@@ -16,6 +16,7 @@ CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
 FORM_TABLE = DB.forms
 FORM_RESPONSE_TABLE = DB.form_responses
+CLINICIAN_TABLE = DB.clinicians
 
 DEFAULT_LIMIT = 20
 METADATA_COLUMNS = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
@@ -399,19 +400,18 @@ def get_response(FormResponseID, remove_id=True, is_draft=None):
 
 
 def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft=False):
-    if IsDraft is True and FormFillerID is not None:
+    if IsDraft is True and FormFillerID is None:
         abort(406)  # Need to know which clinician to return drafts for
 
     parm_query = {}
 
     parm_query['FormFillerID'] = FormFillerID
-    parm_query['DiagnosticProcedureID'] = DiagnosticProcedureID
     parm_query['PatientID'] = PatientID
     parm_query['FormResponseID'] = FormResponseID
 
     search_query = get_search_query(parm_query, error_no_params=False)
 
-    match_forms = FORM_RESPONSE_TABLE.find(search_query)
+    match_forms = FORM_RESPONSE_TABLE.find(search_query, {'FormResponseID', 'FormID', 'PatientID', 'FormFillerID', 'IsDraft', 'Version'})
 
     form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID', is_draft=IsDraft)
 
@@ -419,10 +419,11 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
     parm_query = {}
     parm_query['FormName'] = FormName
+    parm_query['DiagnosticProcedureID'] = DiagnosticProcedureID
     form_lst = query_form(parm_query, restrict_columns=METADATA_COLUMNS, min_form_lst_len=-1, error_no_params=False, get_latest=False)
 
     if len(form_lst) == 0:
-        return []
+        return {'items': [], 'total': 0}
     else:
         cross_form_response_lst = []
 
@@ -529,9 +530,9 @@ def validate_form_response(json):
     query_form(parm_dict, min_form_lst_len=1, get_latest=False)
 
 
-@APP.route('/home/{FormFillerID}', methods=['GET'])
+@APP.route('/home/<FormFillerID>', methods=['GET'])
 def get_home_data(FormFillerID):
-    popular_limit = 5
+    popular_limit = 4
 
     form_response = query_responses(FormFillerID=FormFillerID, IsDraft=True)
 
@@ -556,8 +557,19 @@ def get_home_data(FormFillerID):
     for form_id in form_id_by_popularity:
         form_meta_by_popularity.append(query_form({'FormID': form_id}, max_form_lst_len=1, restrict_columns=METADATA_COLUMNS)[0])
 
+    if len(form_meta_by_popularity) < popular_limit:
+        form_meta_by_popularity += query_form({}, restrict_columns=METADATA_COLUMNS, error_no_params=False)[:(popular_limit - len(form_meta_by_popularity))]
+
     return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
+@APP.route('/clinicians/<ClinicianID>', methods=['GET'])
+def get_clinician(ClinicianID):
+    clinician = CLINICIAN_TABLE.find_one({'FormFillerID': ClinicianID})
+    if clinician is None:
+        abort(404)
+    else:
+        clinician.pop('_id')
+        return jsonify(clinician), 200
 
 if __name__ == '__main__':
     APP.run(debug=True)
