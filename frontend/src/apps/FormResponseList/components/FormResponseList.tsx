@@ -10,7 +10,7 @@ import {
 import { ColumnsType, ColumnType } from 'antd/lib/table';
 import { SearchOutlined } from '@ant-design/icons';
 import { withUser } from 'common/AuthProvider/AuthProvider';
-import { DEFAULT_LIMIT } from 'apps/FormList/constants';
+import { DEFAULT_LIMIT } from '../constants';
 
 export type Props = RouteComponentProps<{}> & { user: SDCClinician };
 
