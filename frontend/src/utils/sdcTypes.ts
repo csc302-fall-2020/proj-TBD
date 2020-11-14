@@ -128,10 +128,11 @@ export interface SDCFormResponseParams {
     DiagnosticProcedureID: DiagnosticProcedureID | null;  
     PatientID: PatientID | null;
     FormResponseID: FormResponseID | null;
+    offset: number;
 }
 
 export interface SDCFormResponseListResponse { 
-    items: { form: SDCFormMetaData, 'form-response': SDCFormResponse }[], 
+    items: { form: SDCFormMetaData, 'form-response': SDCFormResponseMetaData }[], 
     total: number 
 }
 

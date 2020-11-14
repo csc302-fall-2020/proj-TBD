@@ -1,22 +1,23 @@
 import React, { Component } from 'react';
-import { NavLink, withRouter, RouteComponentProps } from 'react-router-dom';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { Table, Input, Button, Space, message } from 'antd';
 import { getFormResponses } from '../repository';
 import {
-    SDCFormResponseListResponse,
     SDCFormResponseListMetaData,
     SDCFormResponseParams,
     SDCClinician
 } from 'utils/sdcTypes';
 import { ColumnsType, ColumnType } from 'antd/lib/table';
 import { SearchOutlined } from '@ant-design/icons';
-import { type } from 'os';
 import { withUser } from 'common/AuthProvider/AuthProvider';
+import { DEFAULT_LIMIT } from 'apps/FormList/constants';
 
 export type Props = RouteComponentProps<{}> & { user: SDCClinician };
 
 interface State {
     loading: boolean;
+    total: number;
+    page: number;
     formResponseList: SDCFormResponseListMetaData[];
     PatientID: string | null;
     FormID: string | null;
@@ -28,17 +29,13 @@ interface State {
 
 class FormResponseList extends Component<Props, State> {
     async componentDidMount() {
-        await this.getResponses({
-            FormName: null,
-            FormFillerID: null,
-            FormResponseID: null,
-            PatientID: null,
-            DiagnosticProcedureID: null
-        });
+        await this.getResponses();
     }
 
     state: State = {
         loading: true,
+        total: 0,
+        page: 1,
         formResponseList: [],
         PatientID: null,
         FormID: null,
@@ -48,18 +45,17 @@ class FormResponseList extends Component<Props, State> {
         DiagnosticProcedureID: null
     };
 
-    getResponses = async (filters: SDCFormResponseParams) => {
-        // await new Promise((res) => setTimeout(() => res(), 2000));
-
+    getResponses = async () => {
         try {
-            const { PatientID, FormName, FormFillerID, FormResponseID, DiagnosticProcedureID } = filters;
+            const { PatientID, FormName, FormFillerID, FormResponseID, DiagnosticProcedureID, page } = this.state;
 
             const response = await getFormResponses({
                 PatientID,
                 FormName,
                 FormFillerID,
                 FormResponseID,
-                DiagnosticProcedureID
+                DiagnosticProcedureID,
+                offset: (page - 1) * DEFAULT_LIMIT
             });
 
             const data = response.items.map((formItem) => {
@@ -75,7 +71,7 @@ class FormResponseList extends Component<Props, State> {
                 };
             });
 
-            this.setState({ formResponseList: data, loading: false });
+            this.setState({ formResponseList: data, loading: false, total: response.total });
         } catch (e) {
             message.error('Something went wrong! Please try again.');
         }
@@ -116,19 +112,20 @@ class FormResponseList extends Component<Props, State> {
         filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
     });
 
-    handleSearch = (selectedKeys: React.ReactText[], confirm: () => void, dataIndex: keyof SDCFormResponseParams) => {
+    handleSearch = async (selectedKeys: React.ReactText[], confirm: () => void, dataIndex: keyof SDCFormResponseParams) => {
         confirm();
 
         const newState = {
             ...this.state,
             [dataIndex]: selectedKeys[0]
         };
-        this.setState(newState);
+        
+        await this.setState(newState);
 
-        this.getResponses(newState);
+        this.getResponses();
     };
 
-    handleReset = (clearFilters: (() => void) | undefined, dataIndex: keyof SDCFormResponseParams) => {
+    handleReset = async (clearFilters: (() => void) | undefined, dataIndex: keyof SDCFormResponseParams) => {
         clearFilters?.();
 
         const newState = {
@@ -136,11 +133,17 @@ class FormResponseList extends Component<Props, State> {
             [dataIndex]: null
         };
 
-        this.setState(newState);
-        this.getResponses(newState);
+        await this.setState(newState);
+        this.getResponses();
     };
 
+    handlePageChange = async (page: number) => {
+        await this.setState({ page });
+        this.getResponses();
+    }
+
     render() {
+        const { total } = this.state;
         const history = this.props.history;
 
         const columns: ColumnsType<SDCFormResponseListMetaData> = [
@@ -188,6 +191,13 @@ class FormResponseList extends Component<Props, State> {
                             }
                         };
                     }}
+                    pagination={
+                        {
+                            onChange: this.handlePageChange,
+                            pageSize: DEFAULT_LIMIT,
+                            total
+                        }
+                    }
                 />
             </>
         );
