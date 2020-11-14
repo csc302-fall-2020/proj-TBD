@@ -203,7 +203,7 @@ def define_sdc_question(attrib, carry_over=None):
     question['QuestionType'] = 'trueFalse'
     question['enabledState'] = None
     question['defaultState'] = None
-    question['order'] = attrib['order']
+    question['order'] = attrib['order'] if 'order' in attrib else None
     question['QuestionID'] = attrib['ID']
     question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name']
     question['DependentQuestions'] = []
@@ -212,6 +212,10 @@ def define_sdc_question(attrib, carry_over=None):
         question['QuestionString'] = carry_over + '\n' + question['QuestionString']
 
     return question
+
+
+def filter_tag(tag):
+    return tag.split('}')[-1]
 
 
 def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over=None):
@@ -240,7 +244,7 @@ def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over
         question = None
         option = None
 
-        tag = child.tag.split('}')[-1]
+        tag = filter_tag(child.tag)
         attrib = child.attrib
 
         if tag == 'Section':  # Section Field
@@ -319,26 +323,41 @@ def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over
     return sections
 
 
-def xml_to_json(file):
-    tree = ET.parse(file)
-    root = tree.getroot()
-
+def get_metadata(root):
     body = None
     FormID = None
     FormName = None
     Version = None
 
+    last_child = None
+
     for child in root:
-        if child.tag.split('}')[-1] == 'Body':
+        last_child = child
+
+        tag = filter_tag(child.tag)
+
+        if tag == 'Body':
             body = child
 
-        else:
+        elif tag == 'Property':
             if child.attrib['name'] == 'TemplateID':
                 FormID = child.attrib['val']
-            elif child.attrib['name'] == 'CAP_ProtocolName':
+            elif child.attrib['name'] == 'OfficialName':
                 FormName = child.attrib['val']
-            elif child.attrib['name'] == 'CAP_ProtocolVersion':
+            elif child.attrib['name'] == 'AJCC_Version':
                 Version = child.attrib['val']
+
+    if FormID is None:
+        body, FormID, FormName, Version = get_metadata(last_child)
+
+    return body, FormID, FormName, Version
+
+
+def xml_to_json(file):
+    tree = ET.parse(file)
+    root = tree.getroot()
+
+    body, FormID, FormName, Version = get_metadata(root)
 
     sections = recurse_xml(body)
 
