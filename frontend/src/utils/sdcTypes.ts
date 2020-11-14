@@ -122,10 +122,30 @@ export interface SDCFormListResponse {
     total: number;
 }
 
-export interface SDCFormResponseListResponse {
-    items: { form: SDCFormMetaData; 'form-response': SDCFormResponseMetaData }[];
-    total: number;
+export interface SDCFormResponseParams {
+    FormName:FormName | null;
+    FormFillerID: FormFillerID | null;
+    DiagnosticProcedureID: DiagnosticProcedureID | null;  
+    PatientID: PatientID | null;
+    FormResponseID: FormResponseID | null;
+    offset: number;
 }
+
+export interface SDCFormResponseListResponse { 
+    items: { form: SDCFormMetaData, 'form-response': SDCFormResponseMetaData }[], 
+    total: number 
+}
+
+export interface SDCFormResponseListMetaData {     
+    key: string,
+    PatientID: string,
+    FormID: string,
+    FormName:string,
+    Date: string,
+    FormFillerID:string,
+    ResponseID:string
+}
+
 
 export interface HomePageResponse {
     drafts: SDCFormResponseListResponse;
