@@ -29,6 +29,9 @@ const Form: React.FC<FormProps> = () => {
 
             try {
                 const form = await formRepository.getForm(formId);
+                if(typeof(form.FormSections) === 'string'){
+                    form.FormSections = JSON.parse(form.FormSections);
+                }
                 setForm(form);
             } catch (e) {
                 setError(e.message);
