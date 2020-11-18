@@ -35,9 +35,10 @@ const _getShareableFormURL = (FormID: FormID) => {
 interface Props {
     metaData: SDCFormMetaData;
     hasActions?: boolean;
+    openUploadModal?: () => void;
 }
 
-const FormCard: React.FC<Props> = ({ metaData, hasActions = true }) => {
+const FormCard: React.FC<Props> = ({ metaData, hasActions = true, openUploadModal }) => {
     const [didCopyLink, setDidCopyLink] = useState(false);
     const { FormID, FormName, Version } = metaData;
     const user = useUser();
@@ -50,6 +51,9 @@ const FormCard: React.FC<Props> = ({ metaData, hasActions = true }) => {
 
     const handleUpdateForm = (e: any) => {
         e.domEvent.stopPropagation();
+        if(openUploadModal){
+            openUploadModal();
+        }
     };
 
     const renderMenu = (

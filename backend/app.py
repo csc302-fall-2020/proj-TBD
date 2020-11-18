@@ -379,13 +379,14 @@ def create_form():
         FormID = json_content['FormID']
         Version = json_content['Version']
 
-        response, response_code = delete_form(FormID, Version)
+        form = FORM_TABLE.find_one({'FormID': FormID, 'Version': Version})
+        #if a form with the same version exists delete it
+        if form is not None:
+            response, response_code = delete_form(FormID, Version)
+            if response_code != 201:
+                return response, response_code
 
-        if response_code != 201:
-            return response, response_code
-
-    if request.method == 'PATCH' or request.method == 'POST':
-        FORM_TABLE.insert_one(json_content)
+    FORM_TABLE.insert_one(json_content)
 
     form = query_form({'FormID': json_content['FormID']}, max_form_lst_len=1)[0]
     return jsonify(form), 201
