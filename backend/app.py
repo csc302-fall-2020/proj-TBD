@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -128,7 +128,7 @@ def get_search_query(parm_dict, error_no_params=True):
 def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True, remove_id=True, get_latest=True):
     search_query = get_search_query(parm_dict, error_no_params)
 
-    match_forms = FORM_TABLE.find(search_query, restrict_columns)
+    match_forms = FORM_TABLE.find(search_query, restrict_columns).sort("CreateTime", -1)
 
     form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len, remove_id=remove_id, get_latest=get_latest)
 
@@ -371,6 +371,7 @@ def get_json_content():
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
+    json_content['CreateTime'] = datetime.now()
 
     if request.method == 'PATCH':
         if 'FormID' not in json_content or 'Version' not in json_content:
@@ -378,7 +379,6 @@ def create_form():
 
         FormID = json_content['FormID']
         Version = json_content['Version']
-
         form = FORM_TABLE.find_one({'FormID': FormID, 'Version': Version})
         #if a form with the same version exists delete it
         if form is not None:
@@ -514,7 +514,7 @@ def create_form_response():
 
     FormResponseID = json['FormResponseID'] if 'FormResponseID' in json else str(int(max_response_id) + 1)
     json['FormResponseID'] = FormResponseID
-
+    json['CreateTime'] = datetime.now()
     FORM_RESPONSE_TABLE.insert_one(json)
     return FormResponseID, 201
 
