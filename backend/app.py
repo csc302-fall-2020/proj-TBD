@@ -19,7 +19,13 @@ FORM_RESPONSE_TABLE = DB.form_responses
 CLINICIAN_TABLE = DB.clinicians
 
 DEFAULT_LIMIT = 20
-METADATA_COLUMNS = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
+METADATA_COLUMNS = {
+        'FormID': 1,
+        'DiagnosticProcedureID': 1,
+        'Version':1,
+        'FormName': 1,
+        'CreateDate': {"$dateToString": {"date": "$CreateTime"}}
+        }
 
 
 @APP.route('/')
@@ -127,7 +133,7 @@ def get_search_query(parm_dict, error_no_params=True):
 
 def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True, remove_id=True, get_latest=True):
     search_query = get_search_query(parm_dict, error_no_params)
-
+    
     match_forms = FORM_TABLE.find(search_query, restrict_columns).sort("CreateTime", -1)
 
     form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len, remove_id=remove_id, get_latest=get_latest)
@@ -393,7 +399,7 @@ def create_form():
 
 
 def get_response(FormResponseID, remove_id=True, is_draft=None):
-    match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
+    match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID}).sort("CreateTime", -1)
 
     form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id, is_draft=is_draft)[0]
 
@@ -412,7 +418,16 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
 
     search_query = get_search_query(parm_query, error_no_params=False)
 
-    match_forms = FORM_RESPONSE_TABLE.find(search_query, {'FormResponseID', 'FormID', 'PatientID', 'FormFillerID', 'IsDraft', 'Version'})
+    match_forms = FORM_RESPONSE_TABLE.find(search_query, 
+            {
+                'FormResponseID': 1,
+                'FormID': 1,
+                'PatientID': 1,
+                'FormFillerID': 1,
+                'IsDraft': 1,
+                'Version': 1,
+                'CreateTime': {"$dateToString": {"date": "$CreateTime"}}
+            })
 
     form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID', is_draft=IsDraft)
 

@@ -166,8 +166,8 @@ class FormResponseList extends Component<Props, State> {
             },
             {
                 title: 'Date',
-                dataIndex: 'date',
-                key: 'date'
+                dataIndex: 'CreateTime',
+                key: 'CreateTime'
             },
             {
                 title: 'Submitted by',

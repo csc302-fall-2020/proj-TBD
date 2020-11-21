@@ -11,7 +11,7 @@ export interface FormRepository {
 
 class SampleFormRepository implements FormRepository {
     async getForm(formId: string): Promise<SDCForm> {
-        await new Promise((res) => setTimeout(() => res(), 500));
+//        await new Promise((res) => setTimeout(() => res(), 500));
 
         if (formId === '1') {
             return {
