@@ -24,7 +24,7 @@ METADATA_COLUMNS = {
         'DiagnosticProcedureID': 1,
         'Version':1,
         'FormName': 1,
-        'CreateDate': {"$dateToString": {"date": "$CreateTime"}}
+        'CreateTime': {"$dateToString": {"date": "$CreateTime"}}
         }
 
 
@@ -473,15 +473,12 @@ def update_form_response(FormResponseID):
 
     search_query = get_search_query(parm_dict)
 
-    query_response = FORM_RESPONSE_TABLE.find(search_query)
-
+    query_response = list(FORM_RESPONSE_TABLE.find(search_query))
     form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False, is_draft=True)
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
 
-    create_form_response()
-
-    return jsonify(success=True), 201
+    return create_form_response()
 
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
@@ -531,7 +528,7 @@ def create_form_response():
     json['FormResponseID'] = FormResponseID
     json['CreateTime'] = datetime.now()
     FORM_RESPONSE_TABLE.insert_one(json)
-    return FormResponseID, 201
+    return jsonify({"FormResponseID": FormResponseID, "CreateTime": str(json['CreateTime']), "status_code": 201}), 201
 
 
 def validate_form_response(json):
