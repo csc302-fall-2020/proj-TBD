@@ -245,6 +245,14 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/FormResponseID'
+        - name: StartDate
+          in: query
+          schema:
+            $ref: '#/components/schemas/Date'
+        - name: EndDate
+          in: query
+          schema:
+            $ref: '#/components/schemas/Date'
       responses:
         '200':
           $ref: '#/components/responses/SDCFormResponseList'
@@ -302,6 +310,9 @@ components:
     FormName:
       type: string
       description: "Form name"
+    Date:
+      type: string
+      description: "Date"
     Version:
       type: string
       description: "Version number for a form"
