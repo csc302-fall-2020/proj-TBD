@@ -140,18 +140,20 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                 try {
                     const response = _constructFormResponse(user, sdcForm, values, isDraft, sdcResponse);
                     if (response.FormResponseID) {
-                        await formRepository.updateResponse(response);
+                        const { CreateTime } = await formRepository.updateResponse(response);
 
                         submittedResponse = {
                             ...response,
-                            FormResponseID: response.FormResponseID
+                            FormResponseID: response.FormResponseID,
+                            CreateTime
                         };
                     } else {
-                        const responseID = await formRepository.submitResponse(response);
+                        const { FormResponseID, CreateTime } = await formRepository.submitResponse(response);
 
                         submittedResponse = {
                             ...response,
-                            FormResponseID: responseID
+                            FormResponseID,
+                            CreateTime
                         };
                     }
 

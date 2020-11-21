@@ -13,6 +13,7 @@ export type FormName = string;
 export type Version = string;
 export type QuestionID = string;
 export type FormResponseID = string;
+export type CreateTime = string;
 
 interface SDCQuestionBase<T extends string> {
     QuestionID: QuestionID;
@@ -55,11 +56,15 @@ export interface SDCSection {
     Questions: SDCQuestion[];
 }
 
-export interface SDCForm {
+export interface SDCFormMetaData {
     FormID: FormID;
     DiagnosticProcedureID: DiagnosticProcedureID;
     FormName: FormName;
     Version: Version;
+    CreateTime: CreateTime;
+}
+
+export interface SDCForm extends SDCFormMetaData {
     FormSections: SDCSection[];
 }
 
@@ -87,27 +92,6 @@ export type SDCAnswerTypes = {
 
 export type SDCAnswer = SDCAnswerTypes[keyof SDCAnswerTypes];
 
-export interface SDCFormResponse {
-    FormResponseID: FormResponseID;
-    FormID: FormID;
-    PatientID: PatientID;
-    FormFillerID: FormFillerID;
-    Answers: { [key: string]: SDCAnswer | null | undefined };
-    IsDraft: boolean;
-    Version: string;
-}
-
-export interface SDCFormResponseForSubmission extends Omit<SDCFormResponse, 'FormResponseID'> {
-    FormResponseID?: string;
-}
-
-export interface SDCFormMetaData {
-    FormID: FormID;
-    DiagnosticProcedureID: DiagnosticProcedureID;
-    FormName: FormName;
-    Version: Version;
-}
-
 export interface SDCFormResponseMetaData {
     FormResponseID: FormResponseID;
     FormID: FormID;
@@ -115,6 +99,15 @@ export interface SDCFormResponseMetaData {
     FormFillerID: FormFillerID;
     IsDraft: boolean;
     Version: string;
+    CreateTime: CreateTime;
+}
+
+export interface SDCFormResponse extends SDCFormResponseMetaData {
+    Answers: { [key: string]: SDCAnswer | null | undefined };
+}
+
+export interface SDCFormResponseForSubmission extends Omit<SDCFormResponse, 'FormResponseID'|'CreateTime'> {
+    FormResponseID?: string;
 }
 
 export interface SDCFormListResponse {
@@ -128,7 +121,14 @@ export interface SDCFormResponseParams {
     DiagnosticProcedureID: DiagnosticProcedureID | null;  
     PatientID: PatientID | null;
     FormResponseID: FormResponseID | null;
+    StartTime: string | null;
+    EndTime: string | null;
     offset: number;
+}
+
+export interface SDCFormResponseResponse {
+    FormResponseID: FormResponseID;
+    CreateTime: CreateTime;
 }
 
 export interface SDCFormResponseListResponse { 
@@ -141,7 +141,7 @@ export interface SDCFormResponseListMetaData {
     PatientID: string,
     FormID: string,
     FormName:string,
-    Date: string,
+    CreateTime: CreateTime,
     FormFillerID:string,
     ResponseID:string
 }

@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { Table, Input, Button, Space, message } from 'antd';
+import { Table, Input, Button, Space, message, DatePicker } from 'antd';
+import moment from 'moment';
 import { getFormResponses } from '../repository';
-import {
-    SDCFormResponseListMetaData,
-    SDCFormResponseParams,
-    SDCClinician
-} from 'utils/sdcTypes';
+import { SDCFormResponseListMetaData, SDCClinician } from 'utils/sdcTypes';
 import { ColumnsType, ColumnType } from 'antd/lib/table';
+import { FilterDropdownProps } from 'antd/lib/table/interface';
 import { SearchOutlined } from '@ant-design/icons';
 import { withUser } from 'common/AuthProvider/AuthProvider';
 import { DEFAULT_LIMIT } from '../constants';
 
 export type Props = RouteComponentProps<{}> & { user: SDCClinician };
+
+type TextSearchIndex = 'PatientID' | 'DiagnosticProcedureID' | 'FormName' | 'FormFillerID';
 
 interface State {
     loading: boolean;
@@ -25,6 +25,8 @@ interface State {
     FormFillerID: string | null;
     FormResponseID: string | null;
     DiagnosticProcedureID: string | null;
+    StartTime: moment.Moment | null;
+    EndTime: moment.Moment | null;
 }
 
 class FormResponseList extends Component<Props, State> {
@@ -42,12 +44,23 @@ class FormResponseList extends Component<Props, State> {
         FormName: null,
         FormFillerID: null,
         FormResponseID: null,
-        DiagnosticProcedureID: null
+        DiagnosticProcedureID: null,
+        StartTime: null,
+        EndTime: null
     };
 
     getResponses = async () => {
         try {
-            const { PatientID, FormName, FormFillerID, FormResponseID, DiagnosticProcedureID, page } = this.state;
+            const {
+                PatientID,
+                FormName,
+                FormFillerID,
+                FormResponseID,
+                DiagnosticProcedureID,
+                StartTime,
+                EndTime,
+                page
+            } = this.state;
 
             const response = await getFormResponses({
                 PatientID,
@@ -55,17 +68,19 @@ class FormResponseList extends Component<Props, State> {
                 FormFillerID,
                 FormResponseID,
                 DiagnosticProcedureID,
+                StartTime: StartTime?.toISOString() ?? null,
+                EndTime: EndTime?.toISOString() ?? null,
                 offset: (page - 1) * DEFAULT_LIMIT
             });
-
-            const data = response.items.map((formItem) => {
+            const data = response.items.map(formItem => {
                 const { 'form-response': formResponse, form } = formItem;
                 return {
                     key: formResponse.FormResponseID,
                     PatientID: formResponse.PatientID,
                     FormID: formResponse.FormID,
+                    DiagnosticProcedureID: form.DiagnosticProcedureID,
                     FormName: form.FormName,
-                    Date: '',
+                    CreateTime: moment(form.CreateTime).format('YYYY-MM-DD'),
                     FormFillerID: formResponse.FormFillerID,
                     ResponseID: formResponse.FormResponseID
                 };
@@ -77,70 +92,95 @@ class FormResponseList extends Component<Props, State> {
         }
     };
 
-    getColumnSearchProps = (
-        dataIndex: keyof SDCFormResponseParams
-    ): Partial<ColumnType<SDCFormResponseListMetaData>> => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }}>
+    getTextSearchProps = (textSearchIndex: TextSearchIndex): Partial<ColumnType<SDCFormResponseListMetaData>> => {
+        const textInputSearch = (filterDropdownProps: FilterDropdownProps) => {
+            const { confirm } = filterDropdownProps;
+            const { [textSearchIndex]: value } = this.state;
+            return (
                 <Input
-                    placeholder={`Search ${dataIndex}`}
-                    value={selectedKeys[0]}
-                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+                    placeholder={`Search ${textSearchIndex}`}
+                    value={value ?? ""}
+                    onChange={e => this.setState({ ...this.state, [textSearchIndex]: e.target.value })}
+                    onPressEnter={() => this.handleSearch(confirm)}
                     style={{ width: 188, marginBottom: 8, display: 'block' }}
                 />
+            );
+        };
+
+        const resetText = async () => {
+            await this.setState({ ...this.state, [textSearchIndex]: null });
+            this.getResponses();
+        };
+
+        return this.getSearchProps(textInputSearch, resetText);
+    };
+
+    getDateSearchProps = (): Partial<ColumnType<SDCFormResponseListMetaData>> => {
+        const dateInputSearch = () => {
+            const { StartTime, EndTime } = this.state;
+
+            return (
+                <DatePicker.RangePicker
+                    value={[StartTime, EndTime]}
+                    onCalendarChange={(dates) => {
+                        const getDate = (date: moment.Moment | null) => {
+                            if (!date) return null;
+
+                            date.set({hour: 0, minute: 0, second: 0, millisecond: 0});
+                            return date;
+                        }
+
+                        this.setState({ StartTime: dates ? getDate(dates[0]) : null, EndTime: dates ? getDate(dates[1]) : null });
+                    }}
+                    style={{ marginRight: 8 }}
+                />
+            );
+        };
+
+        const resetDate = async () => {
+            await this.setState({ ...this.state, StartTime: null, EndTime: null });
+            this.getResponses();
+        };
+
+        return this.getSearchProps(dateInputSearch, resetDate);
+    };
+
+    getSearchProps = (
+        searchComponent: Function,
+        handleReset: Function
+    ): Partial<ColumnType<SDCFormResponseListMetaData>> => ({
+        filterDropdown: ({ confirm }) => (
+            <div style={{ padding: 8 }}>
+                {searchComponent({ confirm })}
                 <Space>
                     <Button
                         type="primary"
-                        onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+                        onClick={() => this.handleSearch(confirm)}
                         icon={<SearchOutlined />}
                         size="small"
                         style={{ width: 90 }}
                     >
                         Search
                     </Button>
-                    <Button
-                        onClick={() => this.handleReset(clearFilters, dataIndex)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
+                    <Button onClick={() => handleReset()} size="small" style={{ width: 90 }}>
                         Reset
                     </Button>
                 </Space>
             </div>
         ),
-        filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
     });
 
-    handleSearch = async (selectedKeys: React.ReactText[], confirm: () => void, dataIndex: keyof SDCFormResponseParams) => {
+    handleSearch = async (confirm: () => void) => {
         confirm();
 
-        const newState = {
-            ...this.state,
-            [dataIndex]: selectedKeys[0]
-        };
-        
-        await this.setState(newState);
-
-        this.getResponses();
-    };
-
-    handleReset = async (clearFilters: (() => void) | undefined, dataIndex: keyof SDCFormResponseParams) => {
-        clearFilters?.();
-
-        const newState = {
-            ...this.state,
-            [dataIndex]: null
-        };
-
-        await this.setState(newState);
         this.getResponses();
     };
 
     handlePageChange = async (page: number) => {
         await this.setState({ page });
         this.getResponses();
-    }
+    };
 
     render() {
         const { total } = this.state;
@@ -151,29 +191,30 @@ class FormResponseList extends Component<Props, State> {
                 title: 'Patient Name',
                 dataIndex: 'PatientID',
                 key: 'PatientID',
-                ...this.getColumnSearchProps('PatientID')
+                ...this.getTextSearchProps('PatientID')
             },
             {
                 title: 'Procedure',
-                dataIndex: 'FormID',
-                key: 'FormID'
+                dataIndex: 'DiagnosticProcedureID',
+                key: 'DiagnosticProcedureID'
             },
             {
                 title: 'Form Name',
                 dataIndex: 'FormName',
                 key: 'FormName',
-                ...this.getColumnSearchProps('FormName')
+                ...this.getTextSearchProps('FormName')
             },
             {
                 title: 'Date',
                 dataIndex: 'CreateTime',
-                key: 'CreateTime'
+                key: 'CreateTime',
+                ...this.getDateSearchProps()
             },
             {
                 title: 'Submitted by',
                 dataIndex: 'FormFillerID',
                 key: 'FormFillerID',
-                ...this.getColumnSearchProps('FormFillerID')
+                ...this.getTextSearchProps('FormFillerID')
             }
         ];
 
@@ -191,13 +232,11 @@ class FormResponseList extends Component<Props, State> {
                             }
                         };
                     }}
-                    pagination={
-                        {
-                            onChange: this.handlePageChange,
-                            pageSize: DEFAULT_LIMIT,
-                            total
-                        }
-                    }
+                    pagination={{
+                        onChange: this.handlePageChange,
+                        pageSize: DEFAULT_LIMIT,
+                        total
+                    }}
                 />
             </>
         );
