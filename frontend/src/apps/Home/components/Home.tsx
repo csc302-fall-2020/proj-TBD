@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Alert, Spin, Button } from 'antd';
 import styled from 'styled-components';
 
@@ -10,6 +10,7 @@ import FormCard from 'common/FormCard/FormCard';
 import { getHomeData } from '../repository';
 
 import { HomePageResponse, SDCFormMetaData, SDCFormResponseListResponse } from 'utils/sdcTypes';
+import { useUser } from 'common/AuthProvider/AuthProvider';
 
 const LoadingWrapper = styled.div`
     display: flex;
@@ -65,10 +66,8 @@ const _renderDrafts = (drafts: SDCFormResponseListResponse) => (
 
 export type Props = {};
 
-type Params = { clinicianID: string };
-
 const Home: React.FC<Props> = () => {
-    const { clinicianID } = useParams<Params>();
+    const { FormFillerID } = useUser();
 
     const [data, setData] = useState<HomePageResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -78,7 +77,7 @@ const Home: React.FC<Props> = () => {
             setError(null);
 
             try {
-                const data = await getHomeData(clinicianID);
+                const data = await getHomeData(FormFillerID);
                 setData(data);
             } catch (e) {
                 setError(e.message);
@@ -95,7 +94,7 @@ const Home: React.FC<Props> = () => {
     if (data) {
         return (
             <div data-testid="home-page">
-                {_renderForms(clinicianID, data['most-used'])}
+                {_renderForms(FormFillerID, data['most-used'])}
                 {_renderDrafts(data.drafts)}
             </div>
         );
