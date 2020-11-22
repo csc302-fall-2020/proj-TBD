@@ -114,7 +114,8 @@ def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_la
 
 def get_search_query(parm_dict, error_no_params=True):
     search_query = {}
-    to_date = lambda x: datetime.strptime(x.split("T")[0], "%Y-%m-%d")
+    to_start_date = lambda x: datetime.strptime(x.split("T")[0], "%Y-%m-%d")
+    to_end_date = lambda x: datetime.strptime(x.split("T")[0]+"-23:59:59", "%Y-%m-%d-%H:%M:%S")
     date_query = {}
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
@@ -124,12 +125,11 @@ def get_search_query(parm_dict, error_no_params=True):
                 else:
                     search_query[parm_key] = {'$regex': re.compile(parm_dict[parm_key], re.I)}
             elif parm_key == 'StartTime':
-                    date_query["$gte"] = to_date(parm_dict[parm_key])
+                    date_query["$gte"] = to_start_date(parm_dict[parm_key])
             elif parm_key == 'EndTime':
-                    date_query["$gte"] = to_date(parm_dict[parm_key])
+                    date_query["$lte"] = to_end_date(parm_dict[parm_key])
             else:
                 search_query[parm_key] = parm_dict[parm_key]
-    print(date_query)
     if date_query:
         search_query['CreateTime'] = date_query
     if error_no_params and len(search_query) == 0:
@@ -431,7 +431,6 @@ def query_responses(FormName=None,
     parm_query['FormResponseID'] = FormResponseID
     parm_query['StartTime'] = StartTime
     parm_query['EndTime'] = EndTime
-    print(parm_query)
     search_query = get_search_query(parm_query, error_no_params=False)
 
     match_forms = FORM_RESPONSE_TABLE.find(search_query, 
@@ -533,8 +532,8 @@ def search_response():
             DiagnosticProcedureID,
             PatientID,
             FormResponseID,
-            StartTime,
-            EndTime)
+            StartTime=StartTime,
+            EndTime=EndTime)
 
     return jsonify(form_response), 200
 
