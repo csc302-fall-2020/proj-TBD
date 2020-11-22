@@ -107,9 +107,8 @@ class FormResponseList extends Component<Props, State> {
             );
         };
 
-        const resetText = async () => {
-            await this.setState({ ...this.state, [textSearchIndex]: null });
-            this.getResponses();
+        const resetText = () => {
+            this.setState({ ...this.state, [textSearchIndex]: null }, () => this.getResponses());
         };
 
         return this.getSearchProps(textInputSearch, resetText);
@@ -137,9 +136,8 @@ class FormResponseList extends Component<Props, State> {
             );
         };
 
-        const resetDate = async () => {
-            await this.setState({ ...this.state, StartTime: null, EndTime: null });
-            this.getResponses();
+        const resetDate = () => {
+            this.setState({ ...this.state, StartTime: null, EndTime: null }, () => this.getResponses());
         };
 
         return this.getSearchProps(dateInputSearch, resetDate);
