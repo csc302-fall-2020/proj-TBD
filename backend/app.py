@@ -550,7 +550,7 @@ def create_form_response():
     json['FormResponseID'] = FormResponseID
     json['CreateTime'] = datetime.now()
     FORM_RESPONSE_TABLE.insert_one(json)
-    return jsonify({"FormResponseID": FormResponseID, "CreateTime": str(json['CreateTime']), "status_code": 201}), 201
+    return jsonify({"FormResponseID": FormResponseID, "CreateTime": str(json['CreateTime'])}), 201
 
 
 def validate_form_response(json):

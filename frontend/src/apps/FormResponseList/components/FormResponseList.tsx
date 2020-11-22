@@ -80,7 +80,7 @@ class FormResponseList extends Component<Props, State> {
                     FormID: formResponse.FormID,
                     DiagnosticProcedureID: form.DiagnosticProcedureID,
                     FormName: form.FormName,
-                    CreateTime: moment(form.CreateTime).format('YYYY-MM-DD'),
+                    CreateTime: moment(formResponse.CreateTime).format('YYYY-MM-DD'),
                     FormFillerID: formResponse.FormFillerID,
                     ResponseID: formResponse.FormResponseID
                 };

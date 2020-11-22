@@ -33,7 +33,7 @@ const DraftTable: React.FC<Props> = ({ drafts }) => {
             patient: formResponse.PatientID,
             form: form.FormName,
             procedure: form.DiagnosticProcedureID,
-            date: moment(form.CreateTime).format('YYYY-MM-DD')
+            date: moment(formResponse.CreateTime).format('YYYY-MM-DD')
         };
     });
 
