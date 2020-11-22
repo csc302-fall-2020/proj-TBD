@@ -245,11 +245,11 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/FormResponseID'
-        - name: StartDate
+        - name: StartTime
           in: query
           schema:
             $ref: '#/components/schemas/Date'
-        - name: EndDate
+        - name: EndTime
           in: query
           schema:
             $ref: '#/components/schemas/Date'
