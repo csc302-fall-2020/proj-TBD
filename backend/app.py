@@ -114,7 +114,7 @@ def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_la
 
 def get_search_query(parm_dict, error_no_params=True):
     search_query = {}
-    to_date = lambda x: datetime.striptime(x.split("T"), "%d-%m-%d")
+    to_date = lambda x: datetime.strptime(x.split("T")[0], "%Y-%m-%d")
     date_query = {}
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
@@ -129,6 +129,7 @@ def get_search_query(parm_dict, error_no_params=True):
                     date_query["$gte"] = to_date(parm_dict[parm_key])
             else:
                 search_query[parm_key] = parm_dict[parm_key]
+    print(date_query)
     if date_query:
         search_query['CreateTime'] = date_query
     if error_no_params and len(search_query) == 0:
@@ -412,7 +413,14 @@ def get_response(FormResponseID, remove_id=True, is_draft=None):
     return form_response
 
 
-def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft=False):
+def query_responses(FormName=None, 
+        FormFillerID=None,
+        DiagnosticProcedureID=None,
+        PatientID=None,
+        FormResponseID=None,
+        IsDraft=False,
+        StartTime=None,
+        EndTime=None):
     if IsDraft is True and FormFillerID is None:
         abort(406)  # Need to know which clinician to return drafts for
 
@@ -421,7 +429,9 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
     parm_query['FormFillerID'] = FormFillerID
     parm_query['PatientID'] = PatientID
     parm_query['FormResponseID'] = FormResponseID
-
+    parm_query['StartTime'] = StartTime
+    parm_query['EndTime'] = EndTime
+    print(parm_query)
     search_query = get_search_query(parm_query, error_no_params=False)
 
     match_forms = FORM_RESPONSE_TABLE.find(search_query, 
@@ -516,8 +526,15 @@ def search_response():
     DiagnosticProcedureID = request.args.get('DiagnosticProcedureID')
     PatientID = request.args.get('PatientID')
     FormResponseID = request.args.get('FormResponseID')
-
-    form_response = query_responses(FormName, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
+    StartTime = request.args.get('StartTime')
+    EndTime = request.args.get('EndTime')
+    form_response = query_responses(FormName,
+            FormFillerID,
+            DiagnosticProcedureID,
+            PatientID,
+            FormResponseID,
+            StartTime,
+            EndTime)
 
     return jsonify(form_response), 200
 
