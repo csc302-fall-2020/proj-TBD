@@ -1,7 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { Table } from 'antd';
-import moment from "moment";
+import moment from 'moment';
 
 import { SDCFormResponseListResponse } from 'utils/sdcTypes';
 
