@@ -17,7 +17,11 @@ async function run() {
             const collection = file.split('.')[0];
             const json = fs.readFileSync(path.join(dataDir, file), 'utf8');
             const data = JSON.parse(json);
-
+	    for (const i of data){
+	    	if (i.hasOwnProperty('CreateTime')){
+			i.CreateTime = new Date(Date.now());
+	    	}
+	    }
             console.log(`Doing ${collection} collection...`);
             console.log(`  - Clearing ${collection} collection...`);
             const result = await db.collection(collection).deleteMany({});
