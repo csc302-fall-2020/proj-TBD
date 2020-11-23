@@ -194,7 +194,8 @@ class FormResponseList extends Component<Props, State> {
             {
                 title: 'Procedure',
                 dataIndex: 'DiagnosticProcedureID',
-                key: 'DiagnosticProcedureID'
+                key: 'DiagnosticProcedureID',
+                ...this.getTextSearchProps('DiagnosticProcedureID')
             },
             {
                 title: 'Form Name',
