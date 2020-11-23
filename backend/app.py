@@ -360,7 +360,7 @@ def xml_to_json(file):
         'DiagnosticProcedureID': None,
         'FormName': FormName,
         'Version': Version,
-        'FormSections': sections
+        'FormSections': json.dumps(sections)
     }
 
     return form_json
