@@ -262,7 +262,6 @@ def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over
 
         if tag == 'Section':  # Section Field
             section = define_sdc_section(attrib)
-
             sections.append(section)
 
         elif tag == 'Question':  # Question Field
@@ -353,11 +352,11 @@ def get_metadata(root):
             body = child
 
         elif tag == 'Property':
-            if child.attrib['name'] == 'TemplateID':
+            if child.attrib['propName'] == 'TemplateID':
                 FormID = child.attrib['val']
-            elif child.attrib['name'] == 'OfficialName':
+            elif child.attrib['propName'] == 'OfficialName':
                 FormName = child.attrib['val']
-            elif child.attrib['name'] == 'AJCC_Version':
+            elif child.attrib['propName'] == 'AJCC_Version':
                 Version = child.attrib['val']
 
     if FormID is None:
