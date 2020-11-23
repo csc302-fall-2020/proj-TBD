@@ -1,6 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { Table } from 'antd';
+import moment from 'moment';
 
 import { SDCFormResponseListResponse } from 'utils/sdcTypes';
 
@@ -32,7 +33,7 @@ const DraftTable: React.FC<Props> = ({ drafts }) => {
             patient: formResponse.PatientID,
             form: form.FormName,
             procedure: form.DiagnosticProcedureID,
-            date: '2020-01-01' // TODO: Replace with correct date
+            date: moment(formResponse.CreateTime).format('YYYY-MM-DD')
         };
     });
 

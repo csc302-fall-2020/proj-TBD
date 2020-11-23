@@ -11,6 +11,8 @@ import { searchMetaDataList } from '../repository';
 
 import { SDCFormMetaData } from 'utils/sdcTypes';
 
+import UploadFormModal from './UploadFormModal';
+
 const SpinnerWrapper = styled.div`
     display: flex;
     justify-content: center;
@@ -39,6 +41,8 @@ interface State {
     total: number;
     query: string;
     currentPage: number;
+    openUploadFormModal: boolean;
+    uploadingNewForm: boolean;
 }
 
 class FormList extends React.Component<{}, State> {
@@ -51,7 +55,9 @@ class FormList extends React.Component<{}, State> {
         formMetaDataList: [],
         total: 0,
         query: '.*',
-        currentPage: 1
+        currentPage: 1,
+        openUploadFormModal: false,
+        uploadingNewForm: true,
     };
 
     onSearch = async (text: string, page: number) => {
@@ -70,7 +76,9 @@ class FormList extends React.Component<{}, State> {
         await this.onSearch(query, page);
     };
 
-    handleUploadForm = () => {};
+    handleUploadForm = (uploadingNewForm: boolean) => this.setState({openUploadFormModal: true, uploadingNewForm: uploadingNewForm});
+    closeOpenUploadFormModal = () => this.setState({openUploadFormModal: false});
+    onUploadComplete = async () => await this.onSearch(this.state.query, 1);
 
     renderForms = () => {
         const { formMetaDataList } = this.state;
@@ -78,14 +86,14 @@ class FormList extends React.Component<{}, State> {
         return (
             <Forms>
                 {formMetaDataList.map((formMetaData, index) => (
-                    <FormCard key={index} metaData={formMetaData} />
+                    <FormCard key={index} metaData={formMetaData} openUploadModal={() => this.handleUploadForm(false)} />
                 ))}
             </Forms>
         );
     };
 
     render() {
-        const { loading, total, currentPage } = this.state;
+        const { loading, total, currentPage, openUploadFormModal, uploadingNewForm } = this.state;
         return (
             <div data-testid="form-list-page">
                 <Actions>
@@ -95,7 +103,7 @@ class FormList extends React.Component<{}, State> {
                         onSearch={t => this.onSearch(t, 1)}
                         enterButton
                     />
-                    <Button type="primary" icon={<PlusCircleFilled />} onClick={this.handleUploadForm}>
+                    <Button type="primary" icon={<PlusCircleFilled />} onClick={() => this.handleUploadForm(true)}>
                         Upload Form
                     </Button>
                 </Actions>
@@ -114,6 +122,11 @@ class FormList extends React.Component<{}, State> {
                         />
                     </>
                 )}
+                <UploadFormModal
+                 open={openUploadFormModal} 
+                 onClose={this.closeOpenUploadFormModal} 
+                 isNewForm={uploadingNewForm}
+                 onComplete={this.onUploadComplete}  />
             </div>
         );
     }

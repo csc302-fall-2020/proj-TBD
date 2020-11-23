@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -19,7 +19,13 @@ FORM_RESPONSE_TABLE = DB.form_responses
 CLINICIAN_TABLE = DB.clinicians
 
 DEFAULT_LIMIT = 20
-METADATA_COLUMNS = {'FormID', 'DiagnosticProcedureID', 'Version', 'FormName'}
+METADATA_COLUMNS = {
+        'FormID': 1,
+        'DiagnosticProcedureID': 1,
+        'Version':1,
+        'FormName': 1,
+        'CreateTime': {"$dateToString": {"date": "$CreateTime"}}
+        }
 
 
 @APP.route('/')
@@ -108,7 +114,9 @@ def process_query(form_lst, min_form_lst_len=None, max_form_lst_len=None, get_la
 
 def get_search_query(parm_dict, error_no_params=True):
     search_query = {}
-
+    to_start_date = lambda x: datetime.strptime(x.split("T")[0], "%Y-%m-%d")
+    to_end_date = lambda x: datetime.strptime(x.split("T")[0]+"-23:59:59", "%Y-%m-%d-%H:%M:%S")
+    date_query = {}
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
             if parm_key == 'FormName':
@@ -116,9 +124,14 @@ def get_search_query(parm_dict, error_no_params=True):
                     pass
                 else:
                     search_query[parm_key] = {'$regex': re.compile(parm_dict[parm_key], re.I)}
+            elif parm_key == 'StartTime':
+                    date_query["$gte"] = to_start_date(parm_dict[parm_key])
+            elif parm_key == 'EndTime':
+                    date_query["$lte"] = to_end_date(parm_dict[parm_key])
             else:
                 search_query[parm_key] = parm_dict[parm_key]
-
+    if date_query:
+        search_query['CreateTime'] = date_query
     if error_no_params and len(search_query) == 0:
         abort(406)  # missing parameters!
 
@@ -127,8 +140,8 @@ def get_search_query(parm_dict, error_no_params=True):
 
 def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form_lst_len=None, error_no_params=True, remove_id=True, get_latest=True):
     search_query = get_search_query(parm_dict, error_no_params)
-
-    match_forms = FORM_TABLE.find(search_query, restrict_columns)
+    
+    match_forms = FORM_TABLE.find(search_query, restrict_columns).sort("CreateTime", -1)
 
     form_lst = process_query(match_forms, min_form_lst_len=min_form_lst_len, max_form_lst_len=max_form_lst_len, remove_id=remove_id, get_latest=get_latest)
 
@@ -390,6 +403,7 @@ def get_json_content():
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
+    json_content['CreateTime'] = datetime.now()
 
     if request.method == 'PATCH':
         if 'FormID' not in json_content or 'Version' not in json_content:
@@ -397,28 +411,35 @@ def create_form():
 
         FormID = json_content['FormID']
         Version = json_content['Version']
+        form = FORM_TABLE.find_one({'FormID': FormID, 'Version': Version})
+        #if a form with the same version exists delete it
+        if form is not None:
+            response, response_code = delete_form(FormID, Version)
+            if response_code != 201:
+                return response, response_code
 
-        response, response_code = delete_form(FormID, Version)
-
-        if response_code != 201:
-            return response, response_code
-
-    if request.method == 'PATCH' or request.method == 'POST':
-        FORM_TABLE.insert_one(json_content)
+    FORM_TABLE.insert_one(json_content)
 
     form = query_form({'FormID': json_content['FormID']}, max_form_lst_len=1)[0]
     return jsonify(form), 201
 
 
 def get_response(FormResponseID, remove_id=True, is_draft=None):
-    match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID})
+    match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID}).sort("CreateTime", -1)
 
     form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id, is_draft=is_draft)[0]
 
     return form_response
 
 
-def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None, PatientID=None, FormResponseID=None, IsDraft=False):
+def query_responses(FormName=None, 
+        FormFillerID=None,
+        DiagnosticProcedureID=None,
+        PatientID=None,
+        FormResponseID=None,
+        IsDraft=False,
+        StartTime=None,
+        EndTime=None):
     if IsDraft is True and FormFillerID is None:
         abort(406)  # Need to know which clinician to return drafts for
 
@@ -427,10 +448,20 @@ def query_responses(FormName=None, FormFillerID=None, DiagnosticProcedureID=None
     parm_query['FormFillerID'] = FormFillerID
     parm_query['PatientID'] = PatientID
     parm_query['FormResponseID'] = FormResponseID
-
+    parm_query['StartTime'] = StartTime
+    parm_query['EndTime'] = EndTime
     search_query = get_search_query(parm_query, error_no_params=False)
 
-    match_forms = FORM_RESPONSE_TABLE.find(search_query, {'FormResponseID', 'FormID', 'PatientID', 'FormFillerID', 'IsDraft', 'Version'})
+    match_forms = FORM_RESPONSE_TABLE.find(search_query, 
+            {
+                'FormResponseID': 1,
+                'FormID': 1,
+                'PatientID': 1,
+                'FormFillerID': 1,
+                'IsDraft': 1,
+                'Version': 1,
+                'CreateTime': {"$dateToString": {"date": "$CreateTime"}}
+            })
 
     form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID', is_draft=IsDraft)
 
@@ -476,15 +507,12 @@ def update_form_response(FormResponseID):
 
     search_query = get_search_query(parm_dict)
 
-    query_response = FORM_RESPONSE_TABLE.find(search_query)
-
+    query_response = list(FORM_RESPONSE_TABLE.find(search_query))
     form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False, is_draft=True)
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
 
-    create_form_response()
-
-    return jsonify(success=True), 201
+    return create_form_response()
 
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
@@ -516,8 +544,15 @@ def search_response():
     DiagnosticProcedureID = request.args.get('DiagnosticProcedureID')
     PatientID = request.args.get('PatientID')
     FormResponseID = request.args.get('FormResponseID')
-
-    form_response = query_responses(FormName, FormFillerID, DiagnosticProcedureID, PatientID, FormResponseID)
+    StartTime = request.args.get('StartTime')
+    EndTime = request.args.get('EndTime')
+    form_response = query_responses(FormName,
+            FormFillerID,
+            DiagnosticProcedureID,
+            PatientID,
+            FormResponseID,
+            StartTime=StartTime,
+            EndTime=EndTime)
 
     return jsonify(form_response), 200
 
@@ -532,9 +567,9 @@ def create_form_response():
 
     FormResponseID = json['FormResponseID'] if 'FormResponseID' in json else str(int(max_response_id) + 1)
     json['FormResponseID'] = FormResponseID
-
+    json['CreateTime'] = datetime.now()
     FORM_RESPONSE_TABLE.insert_one(json)
-    return FormResponseID, 201
+    return jsonify({"FormResponseID": FormResponseID, "CreateTime": str(json['CreateTime'])}), 201
 
 
 def validate_form_response(json):
