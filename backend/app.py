@@ -217,7 +217,7 @@ def define_sdc_question(attrib, carry_over=None):
     question['enabledState'] = None
     question['defaultState'] = None
     question['order'] = attrib['order'] if 'order' in attrib else None
-    question['QuestionID'] = attrib['ID']
+    question['QuestionID'] = str(attrib['ID']).replace('.', '_')
     question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name']
     question['DependentQuestions'] = []
 
