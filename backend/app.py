@@ -119,7 +119,7 @@ def get_search_query(parm_dict, error_no_params=True):
     date_query = {}
     for parm_key in parm_dict:
         if parm_dict[parm_key] is not None:
-            if parm_key == 'FormName':
+            if parm_key == 'FormName' or parm_key == 'FormFillerID' or parm_key == 'DiagnosticProcedureID' or parm_key == 'PatientID':
                 if parm_dict[parm_key] == '.*':
                     pass
                 else:
