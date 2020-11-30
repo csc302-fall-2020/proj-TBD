@@ -3,9 +3,9 @@ import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
 import { Card, Typography, Menu, Dropdown } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
-import CopyToClipboard from 'react-copy-to-clipboard';
+//import CopyToClipboard from 'react-copy-to-clipboard';
 
-import { SDCFormMetaData, FormID } from 'utils/sdcTypes';
+import { SDCFormMetaData, FormID, FormFillerID } from 'utils/sdcTypes';
 import { useUser } from 'common/AuthProvider/AuthProvider';
 
 const StyledCard = styled(Card)`
@@ -28,9 +28,9 @@ const Footer = styled.div`
     justify-content: space-between;
 `;
 
-const _getShareableFormURL = (FormID: FormID) => {
-    return `${window.location.origin}/#/forms/${FormID}`;
-};
+// const _getShareableFormURL = (FormFillerID: FormFillerID, FormID: FormID) => {
+//     return `${window.location.origin}/#/${FormFillerID}/forms/${FormID}`;
+// };
 
 interface Props {
     metaData: SDCFormMetaData;
@@ -39,15 +39,15 @@ interface Props {
 }
 
 const FormCard: React.FC<Props> = ({ metaData, hasActions = true, openUploadModal }) => {
-    const [didCopyLink, setDidCopyLink] = useState(false);
+    //const [didCopyLink, setDidCopyLink] = useState(false);
     const { FormID, FormName, Version } = metaData;
     const user = useUser();
 
-    const handleCopyLink = (e: any) => {
-        e.domEvent.stopPropagation();
-        setDidCopyLink(true);
-        setTimeout(() => setDidCopyLink(false), 1500);
-    };
+    // const handleCopyLink = (e: any) => {
+    //     e.domEvent.stopPropagation();
+    //     setDidCopyLink(true);
+    //     setTimeout(() => setDidCopyLink(false), 1500);
+    // };
 
     const handleUpdateForm = (e: any) => {
         e.domEvent.stopPropagation();
@@ -58,11 +58,11 @@ const FormCard: React.FC<Props> = ({ metaData, hasActions = true, openUploadModa
 
     const renderMenu = (
         <Menu>
-            <Menu.Item onClick={handleCopyLink}>
-                <CopyToClipboard text={_getShareableFormURL(FormID)}>
+            {/* <Menu.Item onClick={handleCopyLink}>
+                <CopyToClipboard text={_getShareableFormURL(user.FormFillerID, FormID)}>
                     <div>{didCopyLink ? 'Copied!' : 'Copy Link'}</div>
                 </CopyToClipboard>
-            </Menu.Item>
+            </Menu.Item> */}
             <Menu.Item onClick={handleUpdateForm}>Update Form</Menu.Item>
         </Menu>
     );

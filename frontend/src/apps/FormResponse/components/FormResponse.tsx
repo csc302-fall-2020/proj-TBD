@@ -37,6 +37,10 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
 
             try {
                 const responseWithForm = await formResponseRepository.getResponse(responseID);
+                
+                if(typeof(responseWithForm.form.FormSections) === 'string'){
+                    responseWithForm.form.FormSections = JSON.parse(responseWithForm.form.FormSections);
+                }
 
                 setResponse(responseWithForm);
                 onReceiveResponse?.(responseWithForm);
