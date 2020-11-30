@@ -611,7 +611,12 @@ def get_home_data(FormFillerID):
         form_meta_by_popularity.append(query_form({'FormID': form_id}, max_form_lst_len=1, restrict_columns=METADATA_COLUMNS)[0])
 
     if len(form_meta_by_popularity) < popular_limit:
-        form_meta_by_popularity += query_form({}, restrict_columns=METADATA_COLUMNS, error_no_params=False)[:(popular_limit - len(form_meta_by_popularity))]
+        extra_forms = query_form({}, restrict_columns=METADATA_COLUMNS, error_no_params=False)
+        for form in extra_forms:
+            if form not in form_meta_by_popularity:
+                form_meta_by_popularity.append(form)
+            if len(form_meta_by_popularity) >= popular_limit:
+                break
 
     return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
