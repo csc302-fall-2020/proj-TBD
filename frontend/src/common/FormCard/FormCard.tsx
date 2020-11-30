@@ -70,14 +70,14 @@ const FormCard: React.FC<Props> = ({ metaData, hasActions = true, openUploadModa
     return (
         <>
             <NavLink to={`/${user.FormFillerID}/forms/${FormID}`}>
-                <StyledCard hoverable bodyStyle={{ height: '100%' }}>
+                <StyledCard hoverable bodyStyle={{ height: '100%' }} data-testid={`form-${FormID}`}>
                     <InnerWrapper>
                         <Typography.Paragraph ellipsis={{ rows: 3 }}>{FormName}</Typography.Paragraph>
                         <Footer>
                             <Card.Meta description={`V ${Version}`} />
                             {hasActions && (
                                 <Dropdown overlay={renderMenu} trigger={['click']}>
-                                    <EllipsisOutlined />
+                                    <EllipsisOutlined data-testid="form-card-actions" />
                                 </Dropdown>
                             )}
                         </Footer>
