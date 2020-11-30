@@ -9,13 +9,8 @@ from bson.objectid import ObjectId
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
-os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
-os.environ['MONGODB_USERNAME'] = 'admin'
-os.environ['MONGODB_PASSWORD'] = 'admin'
-os.environ['MONGODB_DB'] = 'SDC'
-
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -67,9 +62,9 @@ def offset_and_limit(form_lst):
 
 
 def get_latest_form(form_lst):
-    max_version = max([datetime.strptime(x['CreateTime'], '%#m/%#d/%Y') for x in form_lst])
+    max_version = max([x['CreateTime'] for x in form_lst])
 
-    return [x for x in form_lst if datetime.strptime(x['CreateTime'], '%#m/%#d/%Y') == max_version][0]
+    return [x for x in form_lst if x['CreateTime'] == max_version][0]
 
 
 def get_latest_forms(form_lst, key='FormID'):
@@ -223,7 +218,7 @@ def define_sdc_question(attrib, carry_over=None):
     question['defaultState'] = None
     question['order'] = attrib['order'] if 'order' in attrib else None
     question['QuestionID'] = str(attrib['ID']).replace('.', '_')
-    question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name']
+    question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name'] if 'name' in attrib else ''
     question['DependentQuestions'] = []
 
     if carry_over is not None:
@@ -363,19 +358,26 @@ def get_metadata(root):
 
         if tag == 'Body':
             body = child
+            return body, FormID, FormName, Version, CreateTime
 
         elif tag == 'Property':
             if child.attrib['propName'] == 'TemplateID':
                 FormID = child.attrib['val']
             elif child.attrib['propName'] == 'OfficialName':
                 FormName = child.attrib['val']
-            elif child.attrib['propName'] == 'AJCC_Version':
+            elif child.attrib['propName'] == 'AJCC_Version' or child.attrib['propName'] == 'VersionID':
                 Version = child.attrib['val']
-            elif child.attrib['propName'] == 'AccreditationDate':
-                CreateTime = child.attrib['val']
+            elif child.attrib['propName'] == 'AccreditationDate' or child.attrib['propName'] == 'EffectiveDate':
+                try:
+                    CreateTime = datetime.strptime(child.attrib['val'].split()[0], '%m/%d/%Y')
+                except ValueError:
+                    CreateTime = datetime.strptime(child.attrib['val'].split()[0], '%Y-%m-%d')
 
     if FormID is None:
         body, FormID, FormName, Version, CreateTime = get_metadata(last_child)
+
+    if FormID is None:
+        FormID = list(root)[0].attrib['ID']
 
     return body, FormID, FormName, Version, CreateTime
 
