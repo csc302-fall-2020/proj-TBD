@@ -9,8 +9,13 @@ from bson.objectid import ObjectId
 from flask import Flask, Response, request, jsonify, abort, render_template
 from flask_pymongo import PyMongo
 
+os.environ['MONGODB_HOST'] = 'sdc.fbrhz.mongodb.net'
+os.environ['MONGODB_USERNAME'] = 'admin'
+os.environ['MONGODB_PASSWORD'] = 'admin'
+os.environ['MONGODB_DB'] = 'SDC'
+
 APP = Flask(__name__)
-APP.config['MONGO_URI'] = 'mongodb://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
+APP.config['MONGO_URI'] = 'mongodb+srv://{username}:{password}@{host}/{db}?retryWrites=true&w=majority'.format(username=os.environ['MONGODB_USERNAME'], password=os.environ['MONGODB_PASSWORD'], host=os.environ['MONGODB_HOST'], db=os.environ['MONGODB_DB'])
 
 CLUSTER = PyMongo(APP)
 DB = CLUSTER.db
@@ -62,9 +67,9 @@ def offset_and_limit(form_lst):
 
 
 def get_latest_form(form_lst):
-    max_version = max([int(re.sub('\D', '', x['Version'])) for x in form_lst])
+    max_version = max([datetime.strptime(x['CreateTime'], '%#m/%#d/%Y') for x in form_lst])
 
-    return [x for x in form_lst if int(re.sub('\D', '', x['Version'])) == max_version][0]
+    return [x for x in form_lst if datetime.strptime(x['CreateTime'], '%#m/%#d/%Y') == max_version][0]
 
 
 def get_latest_forms(form_lst, key='FormID'):
@@ -262,7 +267,14 @@ def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over
 
         if tag == 'Section':  # Section Field
             section = define_sdc_section(attrib)
-            sections.append(section)
+
+            if isinstance(sections, dict):
+                if 'sections' in sections:
+                    sections['sections'].append(section)
+                else:
+                    sections['sections'] = [section]
+            else:
+                sections.append(section)
 
         elif tag == 'Question':  # Question Field
             question = define_sdc_question(attrib, carry_over)
@@ -340,6 +352,7 @@ def get_metadata(root):
     FormID = None
     FormName = None
     Version = None
+    CreateTime = None
 
     last_child = None
 
@@ -358,18 +371,20 @@ def get_metadata(root):
                 FormName = child.attrib['val']
             elif child.attrib['propName'] == 'AJCC_Version':
                 Version = child.attrib['val']
+            elif child.attrib['propName'] == 'AccreditationDate':
+                CreateTime = child.attrib['val']
 
     if FormID is None:
-        body, FormID, FormName, Version = get_metadata(last_child)
+        body, FormID, FormName, Version, CreateTime = get_metadata(last_child)
 
-    return body, FormID, FormName, Version
+    return body, FormID, FormName, Version, CreateTime
 
 
 def xml_to_json(file):
     tree = ET.parse(file)
     root = tree.getroot()
 
-    body, FormID, FormName, Version = get_metadata(root)
+    body, FormID, FormName, Version, CreateTime = get_metadata(root)
 
     sections = recurse_xml(body)
 
@@ -378,6 +393,7 @@ def xml_to_json(file):
         'DiagnosticProcedureID': None,
         'FormName': FormName,
         'Version': Version,
+        'CreateTime': CreateTime,
         'FormSections': json.dumps(sections)
     }
 
@@ -402,7 +418,6 @@ def get_json_content():
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
-    json_content['CreateTime'] = datetime.now()
 
     if request.method == 'PATCH':
         if 'FormID' not in json_content or 'Version' not in json_content:
@@ -615,6 +630,7 @@ def get_home_data(FormFillerID):
 
     return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
+
 @APP.route('/clinicians/<ClinicianID>', methods=['GET'])
 def get_clinician(ClinicianID):
     clinician = CLINICIAN_TABLE.find_one({'FormFillerID': ClinicianID})
@@ -623,6 +639,7 @@ def get_clinician(ClinicianID):
     else:
         clinician.pop('_id')
         return jsonify(clinician), 200
+
 
 if __name__ == '__main__':
     APP.run(debug=True)
