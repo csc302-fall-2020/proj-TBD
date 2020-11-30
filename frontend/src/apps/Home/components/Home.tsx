@@ -46,12 +46,12 @@ const _renderForms = (clinicianID: string, forms: SDCFormMetaData[]) => (
             <FormsHeader>
                 <h2>Start a New Form</h2>
                 <NavLink to={`/${clinicianID}/forms`}>
-                    <Button type="link">more forms</Button>
+                    <Button data-testid="more-forms" type="link">more forms</Button>
                 </NavLink>
             </FormsHeader>
             <FormsWrapper>
-                {forms.map(metaData => {
-                    return <FormCard metaData={metaData} hasActions={false} />;
+                {forms.map((metaData, key) => {
+                    return <FormCard key={key} metaData={metaData} hasActions={false} />;
                 })}
             </FormsWrapper>
         </Section>
