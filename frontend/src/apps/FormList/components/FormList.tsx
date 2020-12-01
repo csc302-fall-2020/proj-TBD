@@ -84,7 +84,7 @@ class FormList extends React.Component<{}, State> {
         const { formMetaDataList } = this.state;
 
         return (
-            <Forms>
+            <Forms data-testid="form-list">
                 {formMetaDataList.map((formMetaData, index) => (
                     <FormCard key={index} metaData={formMetaData} openUploadModal={() => this.handleUploadForm(false)} />
                 ))}
@@ -108,7 +108,7 @@ class FormList extends React.Component<{}, State> {
                     </Button>
                 </Actions>
                 {loading ? (
-                    <SpinnerWrapper>
+                    <SpinnerWrapper data-testid="spinner">
                         <Spin />
                     </SpinnerWrapper>
                 ) : (
