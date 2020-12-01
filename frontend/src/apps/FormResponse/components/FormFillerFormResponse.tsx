@@ -12,7 +12,7 @@ import {
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { SDCFormResponse } from 'utils/sdcTypes';
 import FormResponse, { FormWithResponse } from './FormResponse';
-import formResponseRepository from '../repository';
+import formResponseRepository from 'apps/FormResponse/repository';
 
 const { confirm } = Modal;
 
@@ -26,7 +26,11 @@ const _showConfirmDelete = (onDelete: () => void) =>
         icon: <ExclamationCircleOutlined />,
         content: 'Once the draft is deleted, it cannot be restored.',
         onOk: onDelete,
-        okText: 'Delete'
+        okText: 'Delete',
+        okButtonProps: {
+            // @ts-ignore
+            'data-testid': 'confirm-delete'
+        }
     });
 
 type Params = {
@@ -56,15 +60,17 @@ const FormFillerFormResponse: React.FC = () => {
     const onDeleteResponse = useCallback(() => {
         const _doDelete = async () => {
             setDeletingResponse(true);
+            let didDelete = false;
             try {
                 await formResponseRepository.deleteDraftResponse(responseID);
-                setDidDeleteResponse(true);
+                didDelete = true;
                 message.success('Deleted draft');
             } catch (e) {
                 message.error(e.message);
             }
 
             setDeletingResponse(false);
+            setDidDeleteResponse(didDelete);
         };
 
         _doDelete();
@@ -94,6 +100,7 @@ const FormFillerFormResponse: React.FC = () => {
                                 <>
                                     <Tooltip key={'cancel-revision'} title={'Cancel Revision'}>
                                         <Button
+                                            data-testid={'cancel-revision'}
                                             type="ghost"
                                             shape="circle"
                                             icon={<CloseOutlined />}
@@ -107,6 +114,7 @@ const FormFillerFormResponse: React.FC = () => {
                                         <>
                                             <Tooltip key={'delete-draft'} title={'Delete Draft'}>
                                                 <Button
+                                                    data-testid={'delete-draft'}
                                                     type="ghost"
                                                     shape="circle"
                                                     danger
@@ -117,6 +125,7 @@ const FormFillerFormResponse: React.FC = () => {
                                             </Tooltip>
                                             <Tooltip key={'make-revision'} title={'Make Revision'}>
                                                 <Button
+                                                    data-testid={'make-revision'}
                                                     type="ghost"
                                                     shape="circle"
                                                     disabled={disabled}
@@ -129,6 +138,7 @@ const FormFillerFormResponse: React.FC = () => {
                                     <Tooltip title={`New ${response.form.FormName}`}>
                                         <NavLink to={`/${clinicianID}/forms/${response.form.FormID}`}>
                                             <Button
+                                                data-testid={'new-form'}
                                                 type="ghost"
                                                 shape="circle"
                                                 icon={<PlusOutlined />}
@@ -146,6 +156,7 @@ const FormFillerFormResponse: React.FC = () => {
                                             text={_getShareableResponseURL(response.response)}
                                         >
                                             <Button
+                                                data-testid={'share-response'}
                                                 type="primary"
                                                 shape="circle"
                                                 icon={<LinkOutlined />}

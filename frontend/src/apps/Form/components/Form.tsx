@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Alert, Spin } from 'antd';
 import { SDCForm } from 'utils/sdcTypes';
 
-import formRepository from '../repository';
+import formRepository from 'apps/Form/repository';
 import FormContainer from './FormContainer';
 
 const LoadingWrapper = styled(Spin)`
@@ -29,7 +29,7 @@ const Form: React.FC<FormProps> = () => {
 
             try {
                 const form = await formRepository.getForm(formId);
-                if(typeof(form.FormSections) === 'string'){
+                if (typeof (form.FormSections) === 'string') {
                     form.FormSections = JSON.parse(form.FormSections);
                 }
                 setForm(form);

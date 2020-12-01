@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SDCForm, SDCFormResponse } from 'utils/sdcTypes';
-import formResponseRepository from '../repository';
+import formResponseRepository from 'apps/FormResponse/repository';
 import FormContainer from 'apps/Form/components/FormContainer';
 import { Alert, Spin, Typography } from 'antd';
 import styled from 'styled-components';
@@ -37,8 +37,8 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
 
             try {
                 const responseWithForm = await formResponseRepository.getResponse(responseID);
-                
-                if(typeof(responseWithForm.form.FormSections) === 'string'){
+
+                if (typeof (responseWithForm.form.FormSections) === 'string') {
                     responseWithForm.form.FormSections = JSON.parse(responseWithForm.form.FormSections);
                 }
 
@@ -58,9 +58,9 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
             setResponse((response) =>
                 response
                     ? {
-                          form: response.form,
-                          response: { ...response.response }
-                      }
+                        form: response.form,
+                        response: { ...response.response }
+                    }
                     : null
             ),
         [enabled]
@@ -87,7 +87,7 @@ const FormResponse: React.FC<FormResponseProps> = (props) => {
                             response: newResponse
                         };
                         setResponse(withForm);
-                        onReceiveResponse?.(withForm)
+                        onReceiveResponse?.(withForm);
                     }}
                 />
             </>
