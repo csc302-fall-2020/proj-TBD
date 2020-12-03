@@ -12,7 +12,7 @@ import {
 import FormSection from './FormSection';
 import styled from 'styled-components';
 import { PATIENT_ID_INPUT_NAME } from '../constants';
-import formRepository from '../repository';
+import formRepository from 'apps/Form/repository';
 import { Redirect } from 'react-router-dom';
 import { isEqual } from 'lodash';
 import { useUser } from 'common/AuthProvider/AuthProvider';
@@ -191,6 +191,10 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
             },
             onCancel() {
                 console.log('Cancel');
+            },
+            okButtonProps: {
+                // @ts-ignore
+                'data-testid': 'submit-confirm'
             }
         });
     }
@@ -239,7 +243,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                 rules={[{ required: true, message: 'Patient ID is required' }]}
                 wrapperCol={{ lg: 5 }}
             >
-                <Input disabled={disabled} />
+                <Input disabled={disabled} data-testid={'patient-id'} />
             </AntForm.Item>
             <Divider />
             <Row>
@@ -249,7 +253,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                     ))}
                 </Col>
             </Row>
-            {(loading || !disabled) && (
+            {(loading || !disabled) && (sdcResponse?.IsDraft ?? true) && (
                 <AntForm.Item>
                     <Space size={'middle'}>
                         <Button
@@ -260,6 +264,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                                 setDraft(true);
                                 form.submit();
                             }}
+                            data-testid={'submit-draft'}
                         >
                             Save to draft
                         </Button>
@@ -270,6 +275,7 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
                             onClick={() => {
                                 showConfirm();
                             }}
+                            data-testid={'submit'}
                         >
                             Submit
                         </Button>

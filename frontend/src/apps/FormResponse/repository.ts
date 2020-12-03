@@ -6,7 +6,7 @@ export type FormResponseWithForm = {
     response: SDCFormResponse;
 };
 
-interface FormResponseRepository {
+export interface FormResponseRepository {
     getResponse(responseID: string): Promise<FormResponseWithForm>;
 
     deleteDraftResponse(responseID: string): Promise<boolean>;
