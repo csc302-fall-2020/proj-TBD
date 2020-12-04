@@ -11,7 +11,7 @@ import FormResponseRepository from 'apps/FormResponseList';
 
 jest.mock('apps/FormResponseList/repository', () => ({
     getFormResponses: async(params?:SDCFormResponseParams): Promise<SDCFormResponseListResponse> => {
-          if( params.FormName = 'test'){
+          if( params?.FormName === 'test'){
            return({
             items: [
                 {
@@ -75,15 +75,19 @@ test('Can view response list', async () => {
     await waitFor(() => expect(getByText('Response Form name')).toBeInTheDocument());
 });
 
-test('searches and render the table', async () => {
+test('Updates search when input changed', async () => {
     const history = createMemoryHistory();
-
-    const { getByText } = render(
-        <Router history={history}>
-            <FormResponseRepository />
-        </Router>
-    );
-
-    await waitFor(() => expect(getByText('Response Form name')).toBeInTheDocument());
+    const placeholder = 'Search Forms';
+    const cardName1 = 'Cool Form';
+    const cardName2 = 'AA';
+    const utils = render(<Router history={history}><FormResponseRepository /></Router>);
+    fireEvent.change(utils.getByPlaceholderText(placeholder), { target: { value: 'test' } });
+    await waitFor(() => expect(utils.queryByTestId('spinner')).not.toBeInTheDocument());
+    fireEvent.click(utils.getAllByRole('button')[0]);
+    await waitFor(() => expect(utils.getByText(cardName2)).toBeInTheDocument());
+    await waitFor(() => expect(utils.queryByText(cardName1)).not.toBeInTheDocument());
+    fireEvent.change(utils.getByPlaceholderText(placeholder), { target: { value: 'Cool' } });
+    fireEvent.click(utils.getAllByRole('button')[0]);
+    await waitFor(() => expect(utils.getByText(cardName1)).toBeInTheDocument());
+    await waitFor(() => expect(utils.queryByText(cardName2)).not.toBeInTheDocument());
 });
-
