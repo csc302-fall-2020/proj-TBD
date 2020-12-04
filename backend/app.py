@@ -264,10 +264,10 @@ def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over
             section = define_sdc_section(attrib)
 
             if isinstance(sections, dict):
-                if 'sections' in sections:
-                    sections['sections'].append(section)
+                if 'Sections' in sections:
+                    sections['Sections'].append(section)
                 else:
-                    sections['sections'] = [section]
+                    sections['Sections'] = [section]
             else:
                 sections.append(section)
 
