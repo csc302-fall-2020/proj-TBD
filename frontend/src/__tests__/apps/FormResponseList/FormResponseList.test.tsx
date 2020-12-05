@@ -77,17 +77,22 @@ test('Can view response list', async () => {
 
 test('Updates search when input changed', async () => {
     const history = createMemoryHistory();
-    const placeholder = 'Search Forms';
-    const cardName1 = 'Cool Form';
-    const cardName2 = 'AA';
-    const utils = render(<Router history={history}><FormResponseRepository /></Router>);
-    fireEvent.change(utils.getByPlaceholderText(placeholder), { target: { value: 'test' } });
-    await waitFor(() => expect(utils.queryByTestId('spinner')).not.toBeInTheDocument());
-    fireEvent.click(utils.getAllByRole('button')[0]);
-    await waitFor(() => expect(utils.getByText(cardName2)).toBeInTheDocument());
-    await waitFor(() => expect(utils.queryByText(cardName1)).not.toBeInTheDocument());
-    fireEvent.change(utils.getByPlaceholderText(placeholder), { target: { value: 'Cool' } });
-    fireEvent.click(utils.getAllByRole('button')[0]);
-    await waitFor(() => expect(utils.getByText(cardName1)).toBeInTheDocument());
-    await waitFor(() => expect(utils.queryByText(cardName2)).not.toBeInTheDocument());
+
+    const { getByTestId, getByPlaceholderText,getByText } = render(<Router history={history}><FormResponseRepository /></Router>);
+
+    // Step 1: Wait for form response page to load
+    await waitFor(() => expect(getByTestId('form-response-page')).toBeInTheDocument());
+
+    // Step 2: Click on Form Name search icon
+    fireEvent.click(getByTestId('FormName-search-icon'));
+
+    // Step 3: Type in search
+    fireEvent.change(getByPlaceholderText('Search FormName'), { target: { value: 'test' } });
+
+    // Step 4: Click Search button
+    fireEvent.click(getByTestId('search-button'));
+
+    // Step 5: Check if the correct results are shown
+    await waitFor(() => expect(getByText('test')).toBeInTheDocument());
+
 });
