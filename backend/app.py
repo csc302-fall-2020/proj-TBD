@@ -62,9 +62,9 @@ def offset_and_limit(form_lst):
 
 
 def get_latest_form(form_lst):
-    max_version = max([int(re.sub('\D', '', x['Version'])) for x in form_lst])
+    max_version = max([x['CreateTime'] for x in form_lst])
 
-    return [x for x in form_lst if int(re.sub('\D', '', x['Version'])) == max_version][0]
+    return [x for x in form_lst if x['CreateTime'] == max_version][0]
 
 
 def get_latest_forms(form_lst, key='FormID'):
@@ -218,7 +218,7 @@ def define_sdc_question(attrib, carry_over=None):
     question['defaultState'] = None
     question['order'] = attrib['order'] if 'order' in attrib else None
     question['QuestionID'] = str(attrib['ID']).replace('.', '_')
-    question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name']
+    question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name'] if 'name' in attrib else ''
     question['DependentQuestions'] = []
 
     if carry_over is not None:
@@ -262,7 +262,14 @@ def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over
 
         if tag == 'Section':  # Section Field
             section = define_sdc_section(attrib)
-            sections.append(section)
+
+            if isinstance(sections, dict):
+                if 'Sections' in sections:
+                    sections['Sections'].append(section)
+                else:
+                    sections['Sections'] = [section]
+            else:
+                sections.append(section)
 
         elif tag == 'Question':  # Question Field
             question = define_sdc_question(attrib, carry_over)
@@ -340,6 +347,7 @@ def get_metadata(root):
     FormID = None
     FormName = None
     Version = None
+    CreateTime = None
 
     last_child = None
 
@@ -350,26 +358,35 @@ def get_metadata(root):
 
         if tag == 'Body':
             body = child
+            return body, FormID, FormName, Version, CreateTime
 
         elif tag == 'Property':
             if child.attrib['propName'] == 'TemplateID':
                 FormID = child.attrib['val']
             elif child.attrib['propName'] == 'OfficialName':
                 FormName = child.attrib['val']
-            elif child.attrib['propName'] == 'AJCC_Version':
+            elif child.attrib['propName'] == 'AJCC_Version' or child.attrib['propName'] == 'VersionID':
                 Version = child.attrib['val']
+            elif child.attrib['propName'] == 'AccreditationDate' or child.attrib['propName'] == 'EffectiveDate':
+                try:
+                    CreateTime = datetime.strptime(child.attrib['val'].split()[0], '%m/%d/%Y')
+                except ValueError:
+                    CreateTime = datetime.strptime(child.attrib['val'].split()[0], '%Y-%m-%d')
 
     if FormID is None:
-        body, FormID, FormName, Version = get_metadata(last_child)
+        body, FormID, FormName, Version, CreateTime = get_metadata(last_child)
 
-    return body, FormID, FormName, Version
+    if FormID is None:
+        FormID = list(root)[0].attrib['ID']
+
+    return body, FormID, FormName, Version, CreateTime
 
 
 def xml_to_json(file):
     tree = ET.parse(file)
     root = tree.getroot()
 
-    body, FormID, FormName, Version = get_metadata(root)
+    body, FormID, FormName, Version, CreateTime = get_metadata(root)
 
     sections = recurse_xml(body)
 
@@ -378,6 +395,7 @@ def xml_to_json(file):
         'DiagnosticProcedureID': None,
         'FormName': FormName,
         'Version': Version,
+        'CreateTime': CreateTime,
         'FormSections': sections
     }
 
@@ -402,7 +420,6 @@ def get_json_content():
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
-    json_content['CreateTime'] = datetime.now()
 
     if request.method == 'PATCH':
         if 'FormID' not in json_content or 'Version' not in json_content:
@@ -620,6 +637,7 @@ def get_home_data(FormFillerID):
 
     return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
+
 @APP.route('/clinicians/<ClinicianID>', methods=['GET'])
 def get_clinician(ClinicianID):
     clinician = CLINICIAN_TABLE.find_one({'FormFillerID': ClinicianID})
@@ -628,6 +646,7 @@ def get_clinician(ClinicianID):
     else:
         clinician.pop('_id')
         return jsonify(clinician), 200
+
 
 if __name__ == '__main__':
     APP.run(debug=True)
