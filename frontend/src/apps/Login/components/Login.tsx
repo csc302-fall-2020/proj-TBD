@@ -2,7 +2,7 @@ import { Col, Layout, Row, Button, Form, Input } from 'antd';
 import { Rule } from 'antd/lib/form';
 import { getUser } from 'common/AuthProvider/repository';
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { login } from '../repository';
@@ -56,7 +56,13 @@ const clinicianRules: Rule[] = [
     }
 ];
 
+type Params = {
+    formID?: string;
+};
+
+
 const Login: React.FC = () => {
+    const { formID } = useParams<Params>();
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const history = useHistory();
@@ -66,7 +72,11 @@ const Login: React.FC = () => {
         setLoading(true);
         try {
             await login(clinicianID);
-            history.push(`${clinicianID}/home`);
+            if (formID) {
+                history.push(`/${clinicianID}/forms/${formID}`);
+            } else {
+                history.push(`${clinicianID}/home`);
+            }
         } catch (e) {
             form.setFields([{ name: 'clinicianID', errors: [e.message] }]);
             setLoading(false);
