@@ -111,7 +111,7 @@ class FormResponseList extends Component<Props, State> {
             this.setState({ ...this.state, [textSearchIndex]: null }, () => this.getResponses());
         };
 
-        return this.getSearchProps(textInputSearch, resetText);
+        return this.getSearchProps(textInputSearch, resetText, textSearchIndex);
     };
 
     getDateSearchProps = (): Partial<ColumnType<SDCFormResponseListMetaData>> => {
@@ -140,18 +140,20 @@ class FormResponseList extends Component<Props, State> {
             this.setState({ ...this.state, StartTime: null, EndTime: null }, () => this.getResponses());
         };
 
-        return this.getSearchProps(dateInputSearch, resetDate);
+        return this.getSearchProps(dateInputSearch, resetDate, 'date');
     };
 
     getSearchProps = (
         searchComponent: Function,
-        handleReset: Function
+        handleReset: Function,
+        searchIndex: string
     ): Partial<ColumnType<SDCFormResponseListMetaData>> => ({
         filterDropdown: ({ confirm }) => (
             <div style={{ padding: 8 }}>
                 {searchComponent({ confirm })}
                 <Space>
                     <Button
+                        data-testid='search-button'
                         type="primary"
                         onClick={() => this.handleSearch(confirm)}
                         icon={<SearchOutlined />}
@@ -166,7 +168,11 @@ class FormResponseList extends Component<Props, State> {
                 </Space>
             </div>
         ),
-        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+        filterIcon: filtered => (
+            <div data-testid={`${searchIndex}-search-icon`}>
+                <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+            </div>
+        )
     });
 
     handleSearch = async (confirm: () => void) => {
@@ -218,7 +224,7 @@ class FormResponseList extends Component<Props, State> {
         ];
 
         return (
-            <>
+            <div data-testid='form-response-page'>
                 <h1>Responses</h1>
                 <Table
                     dataSource={this.state.formResponseList}
@@ -237,7 +243,7 @@ class FormResponseList extends Component<Props, State> {
                         total
                     }}
                 />
-            </>
+            </div>
         );
     }
 }
