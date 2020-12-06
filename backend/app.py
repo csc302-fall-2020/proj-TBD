@@ -43,6 +43,11 @@ def invalid_parameter_combination(error):
     return 'Invalid parameter combination', 406
 
 
+@APP.errorhandler(409)
+def duplicate_form(error):
+    return 'Form already exists!', 409
+
+
 def remove_id_col(form_lst):
     [x.pop('_id') for x in form_lst]
 
@@ -148,11 +153,16 @@ def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form
     return form_lst
 
 
-def delete_form(FormID, Version):
+def delete_form(FormID=None, Version=None, id=None):
     parm_dict = {}
 
-    parm_dict['FormID'] = FormID
-    parm_dict['Version'] = Version
+    if FormID is not None and Version is not None:
+        parm_dict['FormID'] = FormID
+        parm_dict['Version'] = Version
+    elif id is not None:
+        parm_dict['_id'] = id
+    else:
+        abort(404)  # Missing parameters!
 
     form = query_form(parm_dict, max_form_lst_len=1, remove_id=False)[0]
 
@@ -417,24 +427,39 @@ def get_json_content():
     return json_content
 
 
+def does_form_exist(FormID, Version):
+    parm_dict = {'FormID': FormID, 'Version': Version}
+
+    # If >1 form exists, then there's already an error
+    form = query_form(parm_dict, min_form_lst_len=0, max_form_lst_len=1, remove_id=False, get_latest=False)
+
+    if len(form) == 0:
+        return None
+    else:
+        return form[0]
+
+
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
 
-    if request.method == 'PATCH':
-        if 'FormID' not in json_content or 'Version' not in json_content:
-            abort(406)  # missing parameters!
+    if 'FormID' not in json_content or 'Version' not in json_content:
+        abort(406)  # Missing parameters!
 
-        FormID = json_content['FormID']
-        Version = json_content['Version']
-        form = FORM_TABLE.find_one({'FormID': FormID, 'Version': Version})
-        #if a form with the same version exists delete it
-        if form is not None:
-            response, response_code = delete_form(FormID, Version)
-            if response_code != 201:
-                return response, response_code
+    FormID = json_content['FormID']
+    Version = json_content['Version']
+    form = does_form_exist(FormID, Version)
+
+    if form is not None and request.method == 'POST':  # Form already exists
+        abort(409)
 
     FORM_TABLE.insert_one(json_content)
+
+    if form is not None and request.method == 'PATCH':
+        id = form['_id']
+        response, response_code = delete_form(id=id)
+        if response_code != 201:
+            return response, response_code
 
     form = query_form({'FormID': json_content['FormID']}, max_form_lst_len=1)[0]
     return jsonify(form), 201
