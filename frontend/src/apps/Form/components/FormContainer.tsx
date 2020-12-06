@@ -7,7 +7,8 @@ import {
     SDCForm,
     SDCFormResponse,
     SDCFormResponseForSubmission,
-    SDCQuestion
+    SDCQuestion,
+    SDCSection
 } from 'utils/sdcTypes';
 import FormSection from './FormSection';
 import styled from 'styled-components';
@@ -31,8 +32,16 @@ const _getQuestions = (question: SDCQuestion): SDCQuestion[] => {
  * Gets all questions for a form
  */
 const _getFormQuestions = (form: SDCForm): SDCQuestion[] => {
-    return form.FormSections.reduce(
-        (prev, curr) => [...prev, ...curr.Questions.reduce((a, q) => [...a, ..._getQuestions(q)], [] as SDCQuestion[])],
+    return _getFormQuestionsFromSections(form.FormSections);
+};
+
+const _getFormQuestionsFromSections = (sections: SDCSection[]): SDCQuestion[] => {
+    return sections.reduce(
+        (prev, curr) => [
+            ...prev,
+            ...curr.Questions.reduce<SDCQuestion[]>((a, q) => [...a, ..._getQuestions(q)], []),
+            ...(curr.Sections?.reduce<SDCQuestion[]>((a, s) => [...a, ..._getFormQuestionsFromSections([s])], []) ?? [])
+        ],
         [] as SDCQuestion[]
     );
 };
