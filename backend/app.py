@@ -439,15 +439,23 @@ def does_form_exist(FormID, Version):
         return form[0]
 
 
+def validate_form(json):
+    for i in ['FormName', 'FormID', 'Version']:
+        if i not in json:
+            return False
+    return True
+
+
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
 
-    if 'FormID' not in json_content or 'Version' not in json_content:
+    if not validate_form(json_content):
         abort(406)  # Missing parameters!
 
     FormID = json_content['FormID']
     Version = json_content['Version']
+    json_content['CreateTime'] = datetime.now()
     form = does_form_exist(FormID, Version)
 
     if form is not None and request.method == 'POST':  # Form already exists
@@ -467,9 +475,7 @@ def create_form():
 
 def get_response(FormResponseID, remove_id=True, is_draft=None):
     match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID}).sort("CreateTime", -1)
-
     form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id, is_draft=is_draft)[0]
-
     return form_response
 
 
@@ -531,12 +537,10 @@ def query_responses(FormName=None,
 
 def delete_response(FormResponseID):
     form_response = get_response(FormResponseID, remove_id=False, is_draft=True)
-
     if 'IsDraft' not in form_response or form_response['IsDraft'] is False:
         abort(405)  # Form response must be a draft to delete
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response['_id'])})
-
     return jsonify(success=True), 201
 
 

@@ -1,16 +1,18 @@
 from flask_testing import TestCase
 import json
-
+from datetime import datetime
 import app
-
+import time
 
 class TestFormEndpoints(TestCase):
     def create_app(self):
         app.FORM_TABLE.delete_many({})
-        app.FORM_TABLE.insert_one({'FormName': 'Test1', 'FormID': '-2', 'Version': '1.0'})
-        app.FORM_TABLE.insert_one({'FormName': 'Test2', 'FormID': '-2', 'Version': '1.1', 'DiagnosticProcedureID': '-4'})
-        app.FORM_TABLE.insert_one({'FormName': 'Test3', 'FormID': '-2', 'Version': '1.13', 'DiagnosticProcedureID': '-4'})
-        app.FORM_TABLE.insert_one({'FormName': 'Test4', 'FormID': '-3', 'Version': '1.0', 'DiagnosticProcedureID': '-5'})
+        app.FORM_TABLE.insert_one({'FormName': 'Test1', 'FormID': '-2', 'Version': '1.0', 'CreateTime': datetime.now()})
+        time.sleep(0.1)
+        app.FORM_TABLE.insert_one({'FormName': 'Test2', 'FormID': '-2', 'Version': '1.1', 'DiagnosticProcedureID': '-4', 'CreateTime': datetime.now()})
+        time.sleep(0.1)
+        app.FORM_TABLE.insert_one({'FormName': 'Test3', 'FormID': '-2', 'Version': '1.13', 'DiagnosticProcedureID': '-4', 'CreateTime': datetime.now()})
+        app.FORM_TABLE.insert_one({'FormName': 'Test4', 'FormID': '-3', 'Version': '1.0', 'DiagnosticProcedureID': '-5', 'CreateTime': datetime.now()})
 
         return app.APP
 
@@ -120,9 +122,9 @@ class TestFormEndpoints(TestCase):
 class TestResponseFormEndpoints(TestCase):
     def create_app(self):
         app.FORM_RESPONSE_TABLE.delete_many({})
-        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-2', 'FormID': '-3', 'Version': '1.0', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}})
-        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-3', 'FormID': '-3', 'Version': '2.0', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}})
-        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-4', 'FormID': '-4', 'Version': '1.0', 'PatientID': '-6', 'FormFillerID': '-7', 'Answers': {}})
+        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-2', 'FormID': '-3', 'Version': '1.0', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}, 'CreateTime': datetime.now()})
+        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-3', 'FormID': '-3', 'Version': '2.0', 'PatientID': '-5', 'FormFillerID': '-6', 'Answers': {}, 'CreateTime': datetime.now()})
+        app.FORM_RESPONSE_TABLE.insert_one({'FormResponseID': '-4', 'FormID': '-4', 'Version': '1.0', 'PatientID': '-6', 'FormFillerID': '-7', 'Answers': {}, 'CreateTime': datetime.now()})
 
         return app.APP
 
@@ -233,6 +235,3 @@ class TestResponseFormEndpoints(TestCase):
 
         response = self.client.post("/form-responses", data=json.dumps({'FormID': FormID, 'Version': Version, 'DiagnosticProcedureID': '-4', 'PatientID': PatientID, 'FormFillerID': FormFillerID, 'Answers': {}, 'IsDraft': 'true'}), content_type='application/json')
         self.assertEqual(response.status_code, 201)
-
-        response = self.client.delete("/form-responses/{FormResponseID}".format(FormResponseID=FormResponseID))
-        #self.assertEqual(response.status_code, 201)
