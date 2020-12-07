@@ -423,6 +423,7 @@ def get_json_content():
 
     else:  # Uploaded JSON
         json_content = request.json
+        json_content["CreateTime"] = datetime.now()
 
     return json_content
 
@@ -455,7 +456,6 @@ def create_form():
 
     FormID = json_content['FormID']
     Version = json_content['Version']
-    json_content['CreateTime'] = datetime.now()
     form = does_form_exist(FormID, Version)
 
     if form is not None and request.method == 'POST':  # Form already exists
