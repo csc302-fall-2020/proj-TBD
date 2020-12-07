@@ -502,7 +502,7 @@ def query_responses(FormName=None,
                 'IsDraft': 1,
                 'Version': 1,
                 'CreateTime': {"$dateToString": {"date": "$CreateTime"}}
-            })
+            }).sort("CreateTime", -1)
 
     form_response_lst = process_query(match_forms, min_form_lst_len=-1, key='FormResponseID', is_draft=IsDraft)
 
