@@ -26,6 +26,7 @@ function AppRouter() {
             </Route>
             <Route exact path="/" component={Login} />
             <Route exact path="/responses/:responseID" children={<FormReceiverFormResponse />} />
+            <Route exact path="/forms/:formID" children={<Login />} />
             <Route path={'/:clinicianID'}>
                 <AuthProvider>
                     <Route

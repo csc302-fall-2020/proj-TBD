@@ -43,6 +43,11 @@ def invalid_parameter_combination(error):
     return 'Invalid parameter combination', 406
 
 
+@APP.errorhandler(409)
+def duplicate_form(error):
+    return 'Form already exists!', 409
+
+
 def remove_id_col(form_lst):
     [x.pop('_id') for x in form_lst]
 
@@ -62,9 +67,9 @@ def offset_and_limit(form_lst):
 
 
 def get_latest_form(form_lst):
-    max_version = max([int(re.sub('\D', '', x['Version'])) for x in form_lst])
+    max_version = max([x['CreateTime'] for x in form_lst])
 
-    return [x for x in form_lst if int(re.sub('\D', '', x['Version'])) == max_version][0]
+    return [x for x in form_lst if x['CreateTime'] == max_version][0]
 
 
 def get_latest_forms(form_lst, key='FormID'):
@@ -148,11 +153,16 @@ def query_form(parm_dict, restrict_columns=None, min_form_lst_len=None, max_form
     return form_lst
 
 
-def delete_form(FormID, Version):
+def delete_form(FormID=None, Version=None, id=None):
     parm_dict = {}
 
-    parm_dict['FormID'] = FormID
-    parm_dict['Version'] = Version
+    if FormID is not None and Version is not None:
+        parm_dict['FormID'] = FormID
+        parm_dict['Version'] = Version
+    elif id is not None:
+        parm_dict['_id'] = id
+    else:
+        abort(404)  # Missing parameters!
 
     form = query_form(parm_dict, max_form_lst_len=1, remove_id=False)[0]
 
@@ -218,7 +228,7 @@ def define_sdc_question(attrib, carry_over=None):
     question['defaultState'] = None
     question['order'] = attrib['order'] if 'order' in attrib else None
     question['QuestionID'] = str(attrib['ID']).replace('.', '_')
-    question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name']
+    question['QuestionString'] = attrib['title'] if 'title' in attrib else attrib['name'] if 'name' in attrib else ''
     question['DependentQuestions'] = []
 
     if carry_over is not None:
@@ -262,7 +272,14 @@ def recurse_xml(xml, sections=None, questions=None, last_option=None, carry_over
 
         if tag == 'Section':  # Section Field
             section = define_sdc_section(attrib)
-            sections.append(section)
+
+            if isinstance(sections, dict):
+                if 'Sections' in sections:
+                    sections['Sections'].append(section)
+                else:
+                    sections['Sections'] = [section]
+            else:
+                sections.append(section)
 
         elif tag == 'Question':  # Question Field
             question = define_sdc_question(attrib, carry_over)
@@ -340,6 +357,7 @@ def get_metadata(root):
     FormID = None
     FormName = None
     Version = None
+    CreateTime = None
 
     last_child = None
 
@@ -350,26 +368,35 @@ def get_metadata(root):
 
         if tag == 'Body':
             body = child
+            return body, FormID, FormName, Version, CreateTime
 
         elif tag == 'Property':
             if child.attrib['propName'] == 'TemplateID':
                 FormID = child.attrib['val']
             elif child.attrib['propName'] == 'OfficialName':
                 FormName = child.attrib['val']
-            elif child.attrib['propName'] == 'AJCC_Version':
+            elif child.attrib['propName'] == 'AJCC_Version' or child.attrib['propName'] == 'VersionID':
                 Version = child.attrib['val']
+            elif child.attrib['propName'] == 'AccreditationDate' or child.attrib['propName'] == 'EffectiveDate':
+                try:
+                    CreateTime = datetime.strptime(child.attrib['val'].split()[0], '%m/%d/%Y')
+                except ValueError:
+                    CreateTime = datetime.strptime(child.attrib['val'].split()[0], '%Y-%m-%d')
 
     if FormID is None:
-        body, FormID, FormName, Version = get_metadata(last_child)
+        body, FormID, FormName, Version, CreateTime = get_metadata(last_child)
 
-    return body, FormID, FormName, Version
+    if FormID is None:
+        FormID = list(root)[0].attrib['ID']
+
+    return body, FormID, FormName, Version, CreateTime
 
 
 def xml_to_json(file):
     tree = ET.parse(file)
     root = tree.getroot()
 
-    body, FormID, FormName, Version = get_metadata(root)
+    body, FormID, FormName, Version, CreateTime = get_metadata(root)
 
     sections = recurse_xml(body)
 
@@ -378,6 +405,7 @@ def xml_to_json(file):
         'DiagnosticProcedureID': None,
         'FormName': FormName,
         'Version': Version,
+        'CreateTime': CreateTime,
         'FormSections': sections
     }
 
@@ -399,25 +427,39 @@ def get_json_content():
     return json_content
 
 
+def does_form_exist(FormID, Version):
+    parm_dict = {'FormID': FormID, 'Version': Version}
+
+    # If >1 form exists, then there's already an error
+    form = query_form(parm_dict, min_form_lst_len=0, max_form_lst_len=1, remove_id=False, get_latest=False)
+
+    if len(form) == 0:
+        return None
+    else:
+        return form[0]
+
+
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
-    json_content['CreateTime'] = datetime.now()
 
-    if request.method == 'PATCH':
-        if 'FormID' not in json_content or 'Version' not in json_content:
-            abort(406)  # missing parameters!
+    if 'FormID' not in json_content or 'Version' not in json_content:
+        abort(406)  # Missing parameters!
 
-        FormID = json_content['FormID']
-        Version = json_content['Version']
-        form = FORM_TABLE.find_one({'FormID': FormID, 'Version': Version})
-        #if a form with the same version exists delete it
-        if form is not None:
-            response, response_code = delete_form(FormID, Version)
-            if response_code != 201:
-                return response, response_code
+    FormID = json_content['FormID']
+    Version = json_content['Version']
+    form = does_form_exist(FormID, Version)
+
+    if form is not None and request.method == 'POST':  # Form already exists
+        abort(409)
 
     FORM_TABLE.insert_one(json_content)
+
+    if form is not None and request.method == 'PATCH':
+        id = form['_id']
+        response, response_code = delete_form(id=id)
+        if response_code != 201:
+            return response, response_code
 
     form = query_form({'FormID': json_content['FormID']}, max_form_lst_len=1)[0]
     return jsonify(form), 201
@@ -620,6 +662,7 @@ def get_home_data(FormFillerID):
 
     return jsonify({'drafts': form_response, 'most-used': form_meta_by_popularity})
 
+
 @APP.route('/clinicians/<ClinicianID>', methods=['GET'])
 def get_clinician(ClinicianID):
     clinician = CLINICIAN_TABLE.find_one({'FormFillerID': ClinicianID})
@@ -628,6 +671,7 @@ def get_clinician(ClinicianID):
     else:
         clinician.pop('_id')
         return jsonify(clinician), 200
+
 
 if __name__ == '__main__':
     APP.run(debug=True)

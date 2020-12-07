@@ -54,6 +54,7 @@ export type SDCQuestionTypes = {
 export interface SDCSection {
     SectionTitle: string;
     Questions: SDCQuestion[];
+    Sections?: SDCSection[];
 }
 
 export interface SDCFormMetaData {
