@@ -423,6 +423,7 @@ def get_json_content():
 
     else:  # Uploaded JSON
         json_content = request.json
+        json_content["CreateTime"] = datetime.now()
 
     return json_content
 
@@ -439,11 +440,18 @@ def does_form_exist(FormID, Version):
         return form[0]
 
 
+def validate_form(json):
+    for i in ['FormName', 'FormID', 'Version']:
+        if i not in json:
+            return False
+    return True
+
+
 @APP.route('/forms', methods=['PATCH', 'POST'])
 def create_form():
     json_content = get_json_content()
 
-    if 'FormID' not in json_content or 'Version' not in json_content:
+    if not validate_form(json_content):
         abort(406)  # Missing parameters!
 
     FormID = json_content['FormID']
@@ -467,9 +475,7 @@ def create_form():
 
 def get_response(FormResponseID, remove_id=True, is_draft=None):
     match_form_responses = FORM_RESPONSE_TABLE.find({'FormResponseID': FormResponseID}).sort("CreateTime", -1)
-
     form_response = process_query(match_form_responses, max_form_lst_len=1, get_latest=False, remove_id=remove_id, is_draft=is_draft)[0]
-
     return form_response
 
 
@@ -492,7 +498,6 @@ def query_responses(FormName=None,
     parm_query['StartTime'] = StartTime
     parm_query['EndTime'] = EndTime
     search_query = get_search_query(parm_query, error_no_params=False)
-
     match_forms = FORM_RESPONSE_TABLE.find(search_query, 
             {
                 'FormResponseID': 1,
@@ -532,12 +537,10 @@ def query_responses(FormName=None,
 
 def delete_response(FormResponseID):
     form_response = get_response(FormResponseID, remove_id=False, is_draft=True)
-
     if 'IsDraft' not in form_response or form_response['IsDraft'] is False:
         abort(405)  # Form response must be a draft to delete
 
     FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response['_id'])})
-
     return jsonify(success=True), 201
 
 
@@ -551,10 +554,11 @@ def update_form_response(FormResponseID):
     query_response = list(FORM_RESPONSE_TABLE.find(search_query))
     form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False, is_draft=True)
 
-    FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
-
-    return create_form_response()
-
+    
+    return_json, status = create_form_response()
+    if status == 201:
+        FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
+    return  return_json, status
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
 def process_response(FormResponseID):
