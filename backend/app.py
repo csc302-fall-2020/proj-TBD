@@ -450,7 +450,6 @@ def query_responses(FormName=None,
     parm_query['StartTime'] = StartTime
     parm_query['EndTime'] = EndTime
     search_query = get_search_query(parm_query, error_no_params=False)
-
     match_forms = FORM_RESPONSE_TABLE.find(search_query, 
             {
                 'FormResponseID': 1,
@@ -509,10 +508,11 @@ def update_form_response(FormResponseID):
     query_response = list(FORM_RESPONSE_TABLE.find(search_query))
     form_response_lst = process_query(query_response, max_form_lst_len=1, get_latest=False, key='FormResponseID', remove_id=False, is_draft=True)
 
-    FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
-
-    return create_form_response()
-
+    
+    return_json, status = create_form_response()
+    if status == 201:
+        FORM_RESPONSE_TABLE.delete_one({'_id': ObjectId(form_response_lst[0]['_id'])})
+    return  return_json, status
 
 @APP.route('/form-responses/<FormResponseID>', methods=['GET', 'PATCH', 'DELETE'])
 def process_response(FormResponseID):
